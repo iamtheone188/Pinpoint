@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="js/location.js"></script>
 </head>
 <body style="background:url('img/background.jpg')">
 
@@ -22,47 +23,19 @@
     <div class="row clearfix" style="margin-top:20px">
         <div class="col-xs-1 column">
             <div class="thumbnail thumb-center">
-                <a href="#"><span class="glyphicon glyphicon-chevron-left"></span></a>
+                <a id="leftClick" href="#"><span id="leftIcon" class="glyphicon glyphicon-chevron-left text-muted"></span></a>
             </div>
         </div>
-        <div class="col-xs-2 column">
-            <div class="thumbnail">
+        <div class="col-xs-10 column">
+            <div id="thumbnailID" class="thumbnail">
                 <h3>Kevin Han</h3>
                 <p style="font-weight:bold">Pin Color: Red</p>
                 <p style="font-weight:bold">ETA: Unknown</p>
             </div>
         </div>
-        <div class="col-xs-2 column">
-            <div class="thumbnail">
-                <h3>Gabriel Kho</h3>
-                <p style="font-weight:bold">Pin Color: Green</p>
-                <p style="font-weight:bold">ETA: Unknown</p>
-            </div>
-        </div>
-        <div class="col-xs-2 column">
-            <div class="thumbnail">
-                <h3>John Doe</h3>
-                <p style="font-weight:bold">Pin Color: Blue</p>
-                <p style="font-weight:bold">ETA: Unknown</p>
-            </div>
-        </div>
-        <div class="col-xs-2 column">
-            <div class="thumbnail">
-                <h3>Jane Doe</h3>
-                <p style="font-weight:bold">Pin Color: Yellow</p>
-                <p style="font-weight:bold">ETA: Unknown</p>
-            </div>
-        </div>
-        <div class="col-xs-2 column">
-            <div class="thumbnail">
-                <h3>John Smith</h3>
-                <p style="font-weight:bold">Pin Color: Purple</p>
-                <p style="font-weight:bold">ETA: Unknown</p>
-            </div>
-        </div>
         <div class="col-xs-1 column">
             <div class="thumbnail thumb-center">
-                <a href="#"><span class="glyphicon glyphicon-chevron-right"></span></a>
+                <a id="rightClick" href="#"><span id="rightIcon" class="glyphicon glyphicon-chevron-right"></span></a>
             </div>
         </div>
     </div>
