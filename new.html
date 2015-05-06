@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>New</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+</head>
+<body style="background:url('img/background.jpg')">
+
+<div class="container">
+    <div class="row clearfix" style="margin-top:20px">
+        <div class="col-xs-12 column">
+            <a href="index.html">
+                <button type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span> Back</button>
+            </a>
+        </div>
+    </div>
+    <div class="row clearfix" style="margin-top:20px">
+		<div class="col-xs-12 column">
+			<h1 class="text-center">
+				Share Location
+			</h1>
+		</div>
+	</div>
+    <div class="row clearfix" style="margin-top:20px">
+		<div class="col-xs-12 column">
+			<h3 class="text-center">Time</h3>
+            <div class="btn-group btn-block">
+                <button type="button" class="btn btn-block btn-lg btn-primary dropdown-toggle" data-toggle="dropdown">Choose a duration  <span class="caret"></span></button>
+                <ul class="dropdown-menu" role="menu">
+                    <li><a href="#">10 Minutes</a></li>
+                    <li><a href="#">15 Minutes</a></li>
+                    <li><a href="#">30 Minutes</a></li>
+                    <li><a href="#">45 Minutes</a></li>
+                    <li><a href="#">60 Minutes</a></li>
+                </ul>
+            </div>
+		</div>
+	</div>
+	<div class="row clearfix" style="margin-top:20px">
+		<div class="col-xs-12 column">
+			 <h3 class="text-center">Location</h3>
+             <form role="form">
+                <div class="form-group">
+                    <label for="inputdefault">Address:</label>
+                    <input class="form-control" id="disabledInput" type="text" placeholder="Gates Computer Science, Stanford, CA, 94305" disabled>
+                </div>
+             </form>
+             <img class="image-map" src="http://maps.googleapis.com/maps/api/staticmap?center=Gates+Computer+Science,+Stanford,+CA&zoom=17&scale=1&size=640x640&maptype=roadmap&format=png&visual_refresh=true&markers=icon:http://maps.google.com/mapfiles/ms/icons/red-pushpin.png%7Cshadow:true%7CGates+Computer+Science,+Stanford,+CA" alt="Google Map of Gates Computer Science, Stanford, CA">
+		</div>
+	</div>
+	<div class="row clearfix" style="margin-top:20px">
+		<div class="col-xs-12 column">
+			 <h3 class="text-center">Method of Travel (Optional)</h3>
+             <div class="btn-group btn-block">
+                <button type="button" class="btn btn-block btn-lg btn-primary dropdown-toggle" data-toggle="dropdown">No Method Selected <span class="caret"></span></button>
+                <ul class="dropdown-menu" role="menu">
+                    <li><a href="#">Walk</a></li>
+                    <li><a href="#">Bike</a></li>
+                    <li><a href="#">Car</a></li>
+                </ul>
+            </div>
+		</div>
+	</div>
+    <div class="row clearfix" style="margin-top:20px">
+        <div class="col-xs-12 column">
+            <a href="location.html">
+                <button type="button" class="btn btn-block btn-lg btn-success">Share</button>
+            </a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
