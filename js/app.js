@@ -28,30 +28,59 @@ function showMainPage() {
 
 function showNewPage() {
     $("#app").html("");
-    var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span>Back</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h1 class="text-center">Share Location</h1></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Time</h3><div class="btn-group btn-block"><button type="button" class="btn btn-block btn-lg btn-primary dropdown-toggle" data-toggle="dropdown">Choose a duration  <span class="caret"></span></button><ul class="dropdown-menu" role="menu"><li><a href="javascript:void(0)" data-value="10" >10 Minutes</a></li><li><a href="javascript:void(0)" data-value="15">15 Minutes</a></li><li><a href="javascript:void(0)" data-value="30">30 Minutes</a></li><li><a href="javascript:void(0)" data-value="45">45 Minutes</a></li><li><a href="javascript:void(0)" data-value="60">60 Minutes</a></li></ul></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Location</h3><form role="form"><div class="form-group"><label for="inputdefault">Address:</label><input class="form-control" id="disabledInput" type="text" placeholder="Gates Computer Science, Stanford, CA, 94305" disabled></div></form><img class="image-map" src="img/map1.png" alt="Google Map of Gates Computer Science, Stanford, CA"></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Method of Travel (Optional)</h3><div class="btn-group btn-block"><button type="button" class="btn btn-block btn-lg btn-primary dropdown-toggle" data-toggle="dropdown">No Method Selected <span class="caret"></span></button><ul class="dropdown-menu" role="menu"><li><a href="javascript:void(0)" data-value="walk">Walk</a></li><li><a href="javascript:void(0)" data-value="bike">Bike</a></li><li><a href="javascript:void(0)" data-value="car">Car</a></li></ul></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="share_button" type="button" class="btn btn-block btn-lg btn-success">Share</button></div></div>';
+    var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span> Back</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h1 class="text-center">Share Location</h1></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Time</h3><div class="btn-group btn-block"><button type="button" class="btn btn-block btn-lg btn-primary dropdown-toggle" data-toggle="dropdown">Choose a duration  <span class="caret"></span></button><ul class="dropdown-menu" role="menu"><li><a href="javascript:void(0)" data-value="10" >10 Minutes</a></li><li><a href="javascript:void(0)" data-value="15">15 Minutes</a></li><li><a href="javascript:void(0)" data-value="30">30 Minutes</a></li><li><a href="javascript:void(0)" data-value="45">45 Minutes</a></li><li><a href="javascript:void(0)" data-value="60">60 Minutes</a></li></ul></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Method of Travel (Optional)</h3><div class="btn-group btn-block"><button type="button" class="btn btn-block btn-lg btn-primary dropdown-toggle" data-toggle="dropdown">No Method Selected <span class="caret"></span></button><ul class="dropdown-menu" role="menu"><li><a href="javascript:void(0)" data-value="walk">Walk</a></li><li><a href="javascript:void(0)" data-value="bike">Bike</a></li><li><a href="javascript:void(0)" data-value="car">Car</a></li></ul></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Location</h3><form role="form"><div class="form-group"><label for="inputdefault">Address:</label><input id="cur-address" class="form-control" type="text" value="Gates Computer Science, Stanford, CA, 94305"></div></form></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="dropmarker_button" type="button" class="btn btn-block btn-lg btn-success">Drop Marker</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><div id="map-canvas" class="image-map" style="width: 300px; height: 300px;"><h1>Loading map...</h1></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="share_button" type="button" class="btn btn-block btn-lg btn-success">Share</button></div></div>';
     $("#app").append(HTMLCode);
     //Add event handlers
+    $("#back_button").click(showMainPage);
+    $("#share_button").click(showLocationPage);
     $(".dropdown-menu li a").click(function(){
         $(this).parents(".btn-group").find('.btn').text($(this).text());
         $(this).parents(".btn-group").find('.btn').val($(this).data('value'));
     });
-    $("#back_button").click(showMainPage);
-    $("#share_button").click(showLocationPage);
+    
+    //Add map functionality
+    var mapOptions = {
+        center: new google.maps.LatLng(37.430152, -122.173496),
+        zoom: 17,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    };
+    $("#map-canvas").html("");
+    var map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+    // Place a draggable marker on the map
+    var marker = new google.maps.Marker({
+        position: new google.maps.LatLng(37.430152, -122.173496),
+        map: map,
+        icon: 'img/red-pushpin.png',
+        draggable:true,
+        title:"Destination"
+    });
+    //Add marker to map
+    marker.setMap(map);
+    
+    //Add event for dragging marker
+    google.maps.event.addListener(marker, 'dragend', function() {
+        reverseGeocodePosition(marker.getPosition());
+    });
+    
+    //Add event for drop marker button
+    $("#dropmarker_button").click(function() {
+        geocodePosition($("#cur-address").val(), map, marker);
+    });
 }
 
 function showLocationPage() {
     $("#app").html("");
-    var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span> Back</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-1 column"><div class="thumbnail thumb-center"><a id="leftClick" href="#"><span id="leftIcon" class="glyphicon glyphicon-chevron-left text-muted"></span></a></div></div><div class="col-xs-9 column"><div id="thumbnailID" class="thumbnail"><h1>No Users/Loading...</h1></div></div><div class="col-xs-2 column"><div class="thumbnail thumb-center"><a id="rightClick" href="#"><span id="rightIcon" class="glyphicon glyphicon-chevron-right"></span></a></div></div></div><hr \><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><div class="panel panel-info"><div class="panel-heading"><h2 class="text-center">Destination:</h2><h3 class="text-center">Gates Computer Science, Stanford, CA, 94305</h3></div></div><img class="image-map" src="img/map2.png" alt="Google Map of Gates Computer Science, Stanford, CA"></div></div><hr \><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="checkin_button" type="button" class="btn btn-block btn-lg btn-success disabled">Check In</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="stopshare_button" type="button" class="btn btn-block btn-lg btn-danger">Stop Sharing Location</button></div></div>';
+    var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span> Back</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-1 column"><div class="thumbnail thumb-center"><a id="leftClick" href="#"><span id="leftIcon" class="glyphicon glyphicon-chevron-left text-muted"></span></a></div></div><div class="col-xs-9 column"><div id="thumbnailID" class="thumbnail"><h1>No Users/Loading...</h1></div></div><div class="col-xs-2 column"><div class="thumbnail thumb-center"><a id="rightClick" href="#"><span id="rightIcon" class="glyphicon glyphicon-chevron-right"></span></a></div></div></div><hr \><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><div class="panel panel-info"><div class="panel-heading"><h2 class="text-center">Destination:</h2><h3 id="destination_text" class="text-center"></h3></div></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><div id="map-canvas" class="image-map" style="width: 300px; height: 300px;"><h1>Loading map...</h1></div></div></div><hr \><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="checkin_button" type="button" class="btn btn-block btn-lg btn-success disabled">Check In</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="stopshare_button" type="button" class="btn btn-block btn-lg btn-danger">Stop Sharing Location</button></div></div>';
     $("#app").append(HTMLCode);
     //Add event handlers
     $("#back_button").click(showMainPage);
     $("#stopshare_button").click(showMainPage);
     var currentID = 0;
-    if(mapUserInfo.length > 0) {
+    if(omletDocument.user_data.length > 0) {
         //Set first thumbnail
         $("#thumbnailID").html(""); //Clear
-        var info = mapUserInfo[0];
-        HTMLCode = "<h3>"+info.fullName+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
+        var info = omletDocument.user_data[0];
+        var HTMLCode = "<h3>"+info.fullname+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
                    "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p>";
         $("#thumbnailID").html(HTMLCode);
     }
@@ -63,40 +92,53 @@ function showLocationPage() {
         if(currentID != 0) {
             currentID -= 1;
             //Change icon colors appropriately
-            if(currentID != mapUserInfo.length - 1)
+            if(currentID != omletDocument.user_data.length - 1)
                 $("#rightIcon").removeClass("text-muted");
             if(currentID == 0)
                 $("#leftIcon").addClass("text-muted");
             
             //fetch user info
-            info = mapUserInfo[currentID];
+            var info = omletDocument.user_data[currentID];
             
             //Replace HTML
-            HTMLCode = "<h3>"+info.fullName+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
+            var HTMLCode = "<h3>"+info.fullname+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
                        "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p>";
             $("#thumbnailID").html(""); //Clear
             $("#thumbnailID").html(HTMLCode);
         }
     });
     $("#rightClick").click(function(){
-        if(currentID != mapUserInfo.length - 1) {
+        if(currentID != omletDocument.user_data.length - 1) {
             currentID += 1;
             //Change icon colors appropriately
-             if(currentID == mapUserInfo.length - 1)
+             if(currentID == omletDocument.user_data.length - 1)
                 $("#rightIcon").addClass("text-muted");
             if(currentID != 0)
                 $("#leftIcon").removeClass("text-muted");
             
             //fetch user info
-            info = mapUserInfo[currentID];
+            var info = omletDocument.user_data[currentID];
             
             //Replace HTML
-            HTMLCode = "<h3>"+info.fullName+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
+            var HTMLCode = "<h3>"+info.fullname+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
                        "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p>";
             $("#thumbnailID").html(""); //Clear
             $("#thumbnailID").html(HTMLCode);
         }
     });
+    //Update destination text
+    if(omletDocument.group_location.present) {
+        var pos = new google.maps.LatLng(omletDocument.group_location.lat, omletDocument.group_location.lng);
+        setDestination(pos);
+    }
+    else {
+        $("#destination_text").val('Not Set');
+    }
+    
+    //Now we call the update methods to update map
+    updateMap();
+    //Register periodic event (setInterval, don't forget to clearInterval on any page button press (back, stop sharing)
+    
 }
 
 function showStatsPage(event) {
@@ -126,53 +168,86 @@ function showStatsPage(event) {
     $('#tableData').html(HTMLTableCode);
 }
 
+/* Helper functions */
+//Reference: http://stackoverflow.com/questions/5688745/google-maps-v3-draggable-marker
+function reverseGeocodePosition(position) {
+    geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ 'latLng': position }, function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+            $("#cur-address").val(results[0].formatted_address);
+        }
+    });
+}
 
+function setDestination(position) {
+    geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ 'latLng': position }, function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+            $("#destination_text").text(results[0].formatted_address);
+        }
+        else {
+            $("#destination_text").text(position);
+        }
+    });
+}
+
+function geocodePosition(position, map, marker) {
+    geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ 'address': position }, function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+            marker.setPosition(results[0].geometry.location);
+            map.panTo(results[0].geometry.location);
+        }
+    });
+}
+
+function updateMap() {
+    //Add/replace map and markers
+    $("#map-canvas").html("");
+    if(omletDocument.group_location.present) { //Location sharing started
+        var mapOptions = {
+            center: new google.maps.LatLng(omletDocument.group_location.lat, omletDocument.group_location.lng),
+            zoom: 17,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        var map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+        // Place a destination marker on the map
+        var marker1 = new google.maps.Marker({
+            position: new google.maps.LatLng(omletDocument.group_location.lat, omletDocument.group_location.lng),
+            map: map,
+            icon: 'img/red-pushpin.png',
+            title:"Destination"
+        });
+        marker1.setMap(map);
+        for(var i=0; i<omletDocument.user_data.length; i++) {
+            if(omletDocument.user_data[i].sharing) {
+                var tempMarker = new google.maps.Marker({
+                    position: new google.maps.LatLng(omletDocument.user_data[i].location.lat, omletDocument.user_data[i].location.lng),
+                    map: map,
+                    icon: omletDocument.user_data[i].icon,
+                    title: omletDocument.user_data[i].fullname
+                });
+                tempMarker.setMap(map);
+            }
+        }
+    }
+    else {
+        var mapOptions = { //Show an empty map
+            center: new google.maps.LatLng(0,0),
+            zoom: 4,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        var map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+    }
+}
 
 /* Temporary JSON/Database files */
-
-var mapUserInfo = [
-    {   
-        "id": 0,
-        "fullName": "Kevin Han",
-        "pinColor": "Red",
-        "ETA": 2,
-        "icon": "img/red-dot.png"
-    },
-    {
-        "id": 1,
-        "fullName": "Gabriel Kho",
-        "pinColor": "Green",
-        "ETA": 4,
-        "icon": "img/green-dot.png"
-    },
-    {
-        "id": 2,
-        "fullName": "John Doe",
-        "pinColor": "Blue",
-        "ETA": 7,
-        "icon": "img/blue-dot.png"
-    },
-    {
-        "id": 3,
-        "fullName": "Jane Doe",
-        "pinColor": "Yellow",
-        "ETA": 3,
-        "icon": "img/yellow-dot.png"
-    },
-    {
-        "id": 4,
-        "fullName": "John Smith",
-        "pinColor": "Purple",
-        "ETA": 11,
-        "icon": "img/purple-dot.png"
-    }
-];
-
+//Will be replaced by global Omlet JSON document
 var omletDocument = {
     "group_location": {
-        "present": false,
-        "lat": 0.0,
-        "long": 0.0
+        "present": true,
+        "lat": 37.430152,
+        "lng": -122.173496
     },
     "user_data": [
         {
@@ -180,35 +255,65 @@ var omletDocument = {
             "fullname": "Kevin Han",
             "sharing": true,
             "share_start_time": 0,
-            "location": {}
+            "pinColor": "Red",
+            "ETA": 2,
+            "icon": "img/red-dot.png",
+            "location": {
+                "lat": 37.427917,
+                "lng": -122.174294
+            }
         },
         {
             "omletID": "gkho",
             "fullname": "Gabriel Kho",
             "sharing": true,
             "share_start_time": 0,
-            "location": {}
+            "pinColor": "Green",
+            "ETA": 4,
+            "icon": "img/green-dot.png",
+            "location": {
+                "lat": 37.429422,
+                "lng": -122.173869
+            }
         },
         {
             "omletID": "jhdoe",
             "fullname": "John Doe",
             "sharing": true,
             "share_start_time": 0,
-            "location": {}
+            "pinColor": "Blue",
+            "ETA": 7,
+            "icon": "img/blue-dot.png",
+            "location": {
+                "lat": 37.429291,
+                "lng": -122.172210
+            }
         },
         {
             "omletID": "jndoe",
             "fullname": "Jane Doe",
             "sharing": true,
             "share_start_time": 0,
-            "location": {}
+            "pinColor": "Yellow",
+            "ETA": 3,
+            "icon": "img/yellow-dot.png",
+            "location": {
+                "lat": 37.428204,
+                "lng": -122.175624
+            }
         },
         {
             "omletID": "jsmith",
             "fullname": "John Smith",
             "sharing": true,
             "share_start_time": 0,
-            "location": {}
+            "pinColor": "Purple",
+            "ETA": 11,
+            "icon": "img/purple-dot.png",
+            "location": {
+                "lat": 37.431905,
+                "lng": -122.175787
+            }
         }
     ]
 };
@@ -256,3 +361,8 @@ var stats = [
         "OMDEarned": 1000
     }
 ];
+
+//Map icons
+var map_icons = ["Red", "Blue", "Green", "Yellow", "Orange", "Purple", "Pink", "Light Blue"];
+
+var color_to_icon = {"Red": "img/red-dot.png", "Purple": "img/purple-dot.png", "Pink": "img/pink-dot.png", "Orange": "img/orange-dot.png", "Light Blue": "img/ltblue-dot.png", "Green": "img/green-dot.png", "Blue": "img/blue-dot.png", "Yellow": "img/yellow-dot.png"};

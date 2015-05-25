@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAmxV04NFaGjZDENgx6k6qAEmogPS9WmM4"></script>
     <script src="js/new.js"></script>
 </head>
 <body style="background:url('img/background.jpg')">
@@ -15,9 +16,7 @@
 <div class="container">
     <div class="row clearfix" style="margin-top:20px">
         <div class="col-xs-12 column">
-            <a href="index.html">
-                <button type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span> Back</button>
-            </a>
+            <button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span> Back</button>
         </div>
     </div>
     <div class="row clearfix" style="margin-top:20px">
@@ -42,22 +41,7 @@
             </div>
 		</div>
 	</div>
-	<div class="row clearfix" style="margin-top:20px">
-		<div class="col-xs-12 column">
-			 <h3 class="text-center">Location</h3>
-             <form role="form">
-                <div class="form-group">
-                    <label for="inputdefault">Address:</label>
-                    <input class="form-control" id="disabledInput" type="text" placeholder="Gates Computer Science, Stanford, CA, 94305" disabled>
-                </div>
-             </form>
-             <!-- URL used to request image (using local copy for better performance)
-             <img class="image-map" src="http://maps.googleapis.com/maps/api/staticmap?center=Gates+Computer+Science,+Stanford,+CA&zoom=17&scale=1&size=640x640&maptype=roadmap&format=png&visual_refresh=true&markers=icon:http://maps.google.com/mapfiles/ms/icons/red-pushpin.png%7Cshadow:true%7CGates+Computer+Science,+Stanford,+CA" alt="Google Map of Gates Computer Science, Stanford, CA">
-             -->
-             <img class="image-map" src="img/map1.png" alt="Google Map of Gates Computer Science, Stanford, CA">
-		</div>
-	</div>
-	<div class="row clearfix" style="margin-top:20px">
+    <div class="row clearfix" style="margin-top:20px">
 		<div class="col-xs-12 column">
 			 <h3 class="text-center">Method of Travel (Optional)</h3>
              <div class="btn-group btn-block">
@@ -70,11 +54,32 @@
             </div>
 		</div>
 	</div>
+	<div class="row clearfix" style="margin-top:20px">
+		<div class="col-xs-12 column">
+			 <h3 class="text-center">Location</h3>
+             <form role="form">
+                <div class="form-group">
+                    <label for="inputdefault">Address:</label>
+                    <input id="cur-address" class="form-control" type="text" value="Gates Computer Science, Stanford, CA, 94305">
+                </div>
+             </form>
+		</div>
+	</div>
     <div class="row clearfix" style="margin-top:20px">
         <div class="col-xs-12 column">
-            <a href="location.html">
-                <button type="button" class="btn btn-block btn-lg btn-success">Share</button>
-            </a>
+                <button id="dropmarker_button" type="button" class="btn btn-block btn-lg btn-success">Drop Marker</button>
+        </div>
+    </div>
+    <div class="row clearfix" style="margin-top:20px">
+		<div class="col-xs-12 column">
+            <div id="map-canvas" class="image-map" style="width: 300px; height: 300px;">
+                <h1>Loading map...</h1>
+            </div>
+        </div>
+    </div>
+    <div class="row clearfix" style="margin-top:20px">
+        <div class="col-xs-12 column">
+            <button id="share_button" type="button" class="btn btn-block btn-lg btn-success">Share</button>
         </div>
     </div>
 </div>

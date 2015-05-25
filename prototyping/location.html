@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/style.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAmxV04NFaGjZDENgx6k6qAEmogPS9WmM4"></script>
     <script src="js/location.js"></script>
 </head>
 <body style="background:url('img/background.jpg')">
@@ -15,9 +16,7 @@
 <div class="container">
     <div class="row clearfix" style="margin-top:20px">
         <div class="col-xs-12 column">
-            <a href="index.html">
-                <button type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span> Back</button>
-            </a>
+            <button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span> Back</button>
         </div>
     </div>
     <div class="row clearfix" style="margin-top:20px">
@@ -43,27 +42,27 @@
             <div class="panel panel-info">
                 <div class="panel-heading">
                     <h2 class="text-center">Destination:</h2>
-                    <h3 class="text-center">Gates Computer Science, Stanford, CA, 94305</h3>
+                    <h3 id="destination_text" class="text-center"></h3>
                 </div>
             </div>
-            <!-- URL used to request image (using local copy for better performance)
-            <img class="image-map" src="http://maps.googleapis.com/maps/api/staticmap?center=Gates+Computer+Science,+Stanford,+CA&zoom=17&scale=1&size=640x640&maptype=roadmap&format=png&visual_refresh=true&markers=size:mid%7Ccolor:red%7CElectrical,+Stanford,+CA&markers=size:mid%7Ccolor:blue%7CY2E2,+Stanford,+CA&markers=size:mid%7Ccolor:purple%7CLi+Ka+Shing,+Stanford,+CA&markers=size:mid%7Ccolor:green%7CSerra+Grove,+Stanford,+CA&markers=size:mid%7Ccolor:yellow%7C37.430152,-122.174596&markers=icon:http://maps.google.com/mapfiles/ms/icons/red-pushpin.png%7&markers=icon:http://maps.google.com/mapfiles/ms/icons/red-pushpin.png%7Cshadow:true%7CGates+Computer+Science,+Stanford,+CA" alt="Google Map of Gates Computer Science, Stanford, CA">
-            -->
-            <img class="image-map" src="img/map2.png" alt="Google Map of Gates Computer Science, Stanford, CA">
-            
+        </div>
+    </div>
+    <div class="row clearfix" style="margin-top:20px">
+        <div class="col-xs-12 column">
+            <div id="map-canvas" class="image-map" style="width: 300px; height: 300px;">
+                <h1>Loading map...</h1>
+            </div>
         </div>
     </div>
     <hr \>
     <div class="row clearfix" style="margin-top:20px">
         <div class="col-xs-12 column">
-            <button type="button" class="btn btn-block btn-lg btn-success disabled">Check In</button>
+            <button id="checkin_button" type="button" class="btn btn-block btn-lg btn-success disabled">Check In</button>
         </div>
     </div>
     <div class="row clearfix" style="margin-top:20px">
         <div class="col-xs-12 column">
-            <a href="index.html">
-                <button type="button" class="btn btn-block btn-lg btn-danger">Stop Sharing Location</button>
-            </a>
+            <button id="stopshare_button" type="button" class="btn btn-block btn-lg btn-danger">Stop Sharing Location</button>
         </div>
     </div>
 </div>
