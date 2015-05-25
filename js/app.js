@@ -1,0 +1,258 @@
+// Entry into page (will most likely be replaced by Omlet.ready function
+$(document).ready(function(){
+    showMainPage();
+});
+
+function showMainPage() {
+    $("#app").html("");
+    var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h1 class="text-center">Pinpoint</h1><img class="image-pp-logo" src="img/pinpoint-logo.jpg" class="img-rounded"></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="share_button" type="button" class="btn btn-block btn-lg btn-primary">Start Sharing Location</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="viewmap_button" type="button" class="btn btn-block btn-primary btn-lg">View Map</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Participants</h3><table class="table table-bordered"><thead><tr><th>#</th><th>Name</th><th>Currently Sharing Location?</th><th>Statistics (Click to view)</th></tr></thead><tbody id="tabledata"></tbody></table></div></div>';
+    $("#app").append(HTMLCode);
+    //Add event handlers
+    $("#share_button").click(showNewPage);
+    $("#viewmap_button").click(showLocationPage);
+    $("#tabledata").html("");
+    //Generate Table Data
+    for(var i=0; i<omletDocument['user_data'].length; i++) {
+        if(omletDocument['user_data'][i]['sharing']) {
+            $("#tabledata").append('<tr><td>'+(i+1)+'</td><td>'+omletDocument['user_data'][i]['fullname']+'</td><td>True</td><td><button id="'+omletDocument['user_data'][i]['omletID']+'_button" type="button" class="btn btn-primary">View</button></td></tr>');
+        }
+        else {
+            $("#tabledata").append('<tr><td>'+(i+1)+'</td><td>'+omletDocument['user_data'][i]['fullname']+'</td><td>False</td><td><button id="'+omletDocument['user_data'][i]['omletID']+'_button" type="button" class="btn btn-primary">View</button></td></tr>');
+        }
+    }
+    //Add table button links
+    for(var i=0; i<omletDocument['user_data'].length; i++) {
+        $("#"+omletDocument['user_data'][i]['omletID']+"_button").click(omletDocument['user_data'][i]['omletID'], showStatsPage);
+    }
+}
+
+function showNewPage() {
+    $("#app").html("");
+    var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span>Back</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h1 class="text-center">Share Location</h1></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Time</h3><div class="btn-group btn-block"><button type="button" class="btn btn-block btn-lg btn-primary dropdown-toggle" data-toggle="dropdown">Choose a duration  <span class="caret"></span></button><ul class="dropdown-menu" role="menu"><li><a href="javascript:void(0)" data-value="10" >10 Minutes</a></li><li><a href="javascript:void(0)" data-value="15">15 Minutes</a></li><li><a href="javascript:void(0)" data-value="30">30 Minutes</a></li><li><a href="javascript:void(0)" data-value="45">45 Minutes</a></li><li><a href="javascript:void(0)" data-value="60">60 Minutes</a></li></ul></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Location</h3><form role="form"><div class="form-group"><label for="inputdefault">Address:</label><input class="form-control" id="disabledInput" type="text" placeholder="Gates Computer Science, Stanford, CA, 94305" disabled></div></form><img class="image-map" src="img/map1.png" alt="Google Map of Gates Computer Science, Stanford, CA"></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Method of Travel (Optional)</h3><div class="btn-group btn-block"><button type="button" class="btn btn-block btn-lg btn-primary dropdown-toggle" data-toggle="dropdown">No Method Selected <span class="caret"></span></button><ul class="dropdown-menu" role="menu"><li><a href="javascript:void(0)" data-value="walk">Walk</a></li><li><a href="javascript:void(0)" data-value="bike">Bike</a></li><li><a href="javascript:void(0)" data-value="car">Car</a></li></ul></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="share_button" type="button" class="btn btn-block btn-lg btn-success">Share</button></div></div>';
+    $("#app").append(HTMLCode);
+    //Add event handlers
+    $(".dropdown-menu li a").click(function(){
+        $(this).parents(".btn-group").find('.btn').text($(this).text());
+        $(this).parents(".btn-group").find('.btn').val($(this).data('value'));
+    });
+    $("#back_button").click(showMainPage);
+    $("#share_button").click(showLocationPage);
+}
+
+function showLocationPage() {
+    $("#app").html("");
+    var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span> Back</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-1 column"><div class="thumbnail thumb-center"><a id="leftClick" href="#"><span id="leftIcon" class="glyphicon glyphicon-chevron-left text-muted"></span></a></div></div><div class="col-xs-9 column"><div id="thumbnailID" class="thumbnail"><h1>No Users/Loading...</h1></div></div><div class="col-xs-2 column"><div class="thumbnail thumb-center"><a id="rightClick" href="#"><span id="rightIcon" class="glyphicon glyphicon-chevron-right"></span></a></div></div></div><hr \><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><div class="panel panel-info"><div class="panel-heading"><h2 class="text-center">Destination:</h2><h3 class="text-center">Gates Computer Science, Stanford, CA, 94305</h3></div></div><img class="image-map" src="img/map2.png" alt="Google Map of Gates Computer Science, Stanford, CA"></div></div><hr \><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="checkin_button" type="button" class="btn btn-block btn-lg btn-success disabled">Check In</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="stopshare_button" type="button" class="btn btn-block btn-lg btn-danger">Stop Sharing Location</button></div></div>';
+    $("#app").append(HTMLCode);
+    //Add event handlers
+    $("#back_button").click(showMainPage);
+    $("#stopshare_button").click(showMainPage);
+    var currentID = 0;
+    if(mapUserInfo.length > 0) {
+        //Set first thumbnail
+        $("#thumbnailID").html(""); //Clear
+        var info = mapUserInfo[0];
+        HTMLCode = "<h3>"+info.fullName+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
+                   "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p>";
+        $("#thumbnailID").html(HTMLCode);
+    }
+    else { //No users, mute both buttons
+        $("#rightIcon").addClass("text-muted");
+    }
+    
+    $("#leftClick").click(function(){
+        if(currentID != 0) {
+            currentID -= 1;
+            //Change icon colors appropriately
+            if(currentID != mapUserInfo.length - 1)
+                $("#rightIcon").removeClass("text-muted");
+            if(currentID == 0)
+                $("#leftIcon").addClass("text-muted");
+            
+            //fetch user info
+            info = mapUserInfo[currentID];
+            
+            //Replace HTML
+            HTMLCode = "<h3>"+info.fullName+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
+                       "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p>";
+            $("#thumbnailID").html(""); //Clear
+            $("#thumbnailID").html(HTMLCode);
+        }
+    });
+    $("#rightClick").click(function(){
+        if(currentID != mapUserInfo.length - 1) {
+            currentID += 1;
+            //Change icon colors appropriately
+             if(currentID == mapUserInfo.length - 1)
+                $("#rightIcon").addClass("text-muted");
+            if(currentID != 0)
+                $("#leftIcon").removeClass("text-muted");
+            
+            //fetch user info
+            info = mapUserInfo[currentID];
+            
+            //Replace HTML
+            HTMLCode = "<h3>"+info.fullName+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
+                       "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p>";
+            $("#thumbnailID").html(""); //Clear
+            $("#thumbnailID").html(HTMLCode);
+        }
+    });
+}
+
+function showStatsPage(event) {
+    omletID = event.data;
+    $("#app").html("");
+    var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span>Back</button></div></div><div class="row clearfix" style="margin-top:20px"><div id="tableData" class="col-xs-12 column"></div></div>';
+    $("#app").append(HTMLCode);
+    //Add event handlers
+    $("#back_button").click(showMainPage);
+    //Generate Table Data
+    //Find username in stats
+    var info;
+    for(var i=0; i<stats.length; i++) {
+        if(stats[i].omletID == omletID) {
+            info = stats[i];
+            break;
+        }
+    }
+    var HTMLTableCode = "<table id=\"tableData\" class=\"table table-bordered\"><tbody>" +
+                        "<tr><td style=\"font-weight:bold\">Name</td><td>"+info.fullName+"</td></tr>" +
+                        "<tr><td style=\"font-weight:bold\">Total Number of Trips</td><td>"+info.numTrips+"</td></tr>" +
+                        "<tr><td style=\"font-weight:bold\">Number of Trips On Time</td><td>"+info.onTimeTrips+"</td></tr>" +
+                        "<tr><td style=\"font-weight:bold\">On-Time Percentage</td><td>"+info.onTimePct+"%</td></tr>" +
+                        "<tr><td style=\"font-weight:bold\">Total Omlet Dollars Earned</td><td>"+info.OMDEarned+" OMD</td></tr>" +
+                        "</tbody></table>";
+    $('#tableData').html(''); //Clear
+    $('#tableData').html(HTMLTableCode);
+}
+
+
+
+/* Temporary JSON/Database files */
+
+var mapUserInfo = [
+    {   
+        "id": 0,
+        "fullName": "Kevin Han",
+        "pinColor": "Red",
+        "ETA": 2,
+        "icon": "img/red-dot.png"
+    },
+    {
+        "id": 1,
+        "fullName": "Gabriel Kho",
+        "pinColor": "Green",
+        "ETA": 4,
+        "icon": "img/green-dot.png"
+    },
+    {
+        "id": 2,
+        "fullName": "John Doe",
+        "pinColor": "Blue",
+        "ETA": 7,
+        "icon": "img/blue-dot.png"
+    },
+    {
+        "id": 3,
+        "fullName": "Jane Doe",
+        "pinColor": "Yellow",
+        "ETA": 3,
+        "icon": "img/yellow-dot.png"
+    },
+    {
+        "id": 4,
+        "fullName": "John Smith",
+        "pinColor": "Purple",
+        "ETA": 11,
+        "icon": "img/purple-dot.png"
+    }
+];
+
+var omletDocument = {
+    "group_location": {
+        "present": false,
+        "lat": 0.0,
+        "long": 0.0
+    },
+    "user_data": [
+        {
+            "omletID": "khan",
+            "fullname": "Kevin Han",
+            "sharing": true,
+            "share_start_time": 0,
+            "location": {}
+        },
+        {
+            "omletID": "gkho",
+            "fullname": "Gabriel Kho",
+            "sharing": true,
+            "share_start_time": 0,
+            "location": {}
+        },
+        {
+            "omletID": "jhdoe",
+            "fullname": "John Doe",
+            "sharing": true,
+            "share_start_time": 0,
+            "location": {}
+        },
+        {
+            "omletID": "jndoe",
+            "fullname": "Jane Doe",
+            "sharing": true,
+            "share_start_time": 0,
+            "location": {}
+        },
+        {
+            "omletID": "jsmith",
+            "fullname": "John Smith",
+            "sharing": true,
+            "share_start_time": 0,
+            "location": {}
+        }
+    ]
+};
+
+//Will be replaced by Parse
+var stats = [
+    {
+        "omletID": "khan",
+        "fullName": "Kevin Han",
+        "numTrips": 50,
+        "onTimeTrips": 39,
+        "onTimePct": 78.0,
+        "OMDEarned": 3900
+    },
+    {
+        "omletID": "gkho",
+        "fullName": "Gabriel Kho",
+        "numTrips": 40,
+        "onTimeTrips": 35,
+        "onTimePct": 87.5,
+        "OMDEarned": 3500
+    },
+    {
+        "omletID": "jhdoe",
+        "fullName": "John Doe",
+        "numTrips": 36,
+        "onTimeTrips": 27,
+        "onTimePct": 75.0,
+        "OMDEarned": 2700
+    },
+    {
+        "omletID": "jndoe",
+        "fullName": "Jane Doe",
+        "numTrips": 38,
+        "onTimeTrips": 36,
+        "onTimePct": 94.7,
+        "OMDEarned": 3600
+    },
+    {
+        "omletID": "jsmith",
+        "fullName": "John Smith",
+        "numTrips": 150,
+        "onTimeTrips": 10,
+        "onTimePct": 6.7,
+        "OMDEarned": 1000
+    }
+];

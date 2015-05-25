@@ -1,5 +1,17 @@
 $(document).ready(function(){
     var currentID = 0;
+    if(mapUserInfo.length > 0) {
+        //Set first thumbnail
+        $("#thumbnailID").html(""); //Clear
+        var info = mapUserInfo[0];
+        HTMLCode = "<h3>"+info.fullName+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
+                   "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p>";
+        $("#thumbnailID").html(HTMLCode);
+    }
+    else { //No users, mute both buttons
+        $("#rightIcon").addClass("text-muted");
+    }
+    
     $("#leftClick").click(function(){
         if(currentID != 0) {
             currentID -= 1;
@@ -10,7 +22,7 @@ $(document).ready(function(){
                 $("#leftIcon").addClass("text-muted");
             
             //fetch user info
-            var info = mapUserInfo[currentID];
+            info = mapUserInfo[currentID];
             
             //Replace HTML
             HTMLCode = "<h3>"+info.fullName+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
@@ -29,7 +41,7 @@ $(document).ready(function(){
                 $("#leftIcon").removeClass("text-muted");
             
             //fetch user info
-            var info = mapUserInfo[currentID];
+            info = mapUserInfo[currentID];
             
             //Replace HTML
             HTMLCode = "<h3>"+info.fullName+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
