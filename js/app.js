@@ -28,14 +28,43 @@ function showMainPage() {
 
 function showNewPage() {
     $("#app").html("");
-    var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span> Back</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h1 class="text-center">Share Location</h1></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Time</h3><div class="btn-group btn-block"><button type="button" class="btn btn-block btn-lg btn-primary dropdown-toggle" data-toggle="dropdown">Choose a duration  <span class="caret"></span></button><ul class="dropdown-menu" role="menu"><li><a href="javascript:void(0)" data-value="10" >10 Minutes</a></li><li><a href="javascript:void(0)" data-value="15">15 Minutes</a></li><li><a href="javascript:void(0)" data-value="30">30 Minutes</a></li><li><a href="javascript:void(0)" data-value="45">45 Minutes</a></li><li><a href="javascript:void(0)" data-value="60">60 Minutes</a></li></ul></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Method of Travel (Optional)</h3><div class="btn-group btn-block"><button type="button" class="btn btn-block btn-lg btn-primary dropdown-toggle" data-toggle="dropdown">No Method Selected <span class="caret"></span></button><ul class="dropdown-menu" role="menu"><li><a href="javascript:void(0)" data-value="walk">Walk</a></li><li><a href="javascript:void(0)" data-value="bike">Bike</a></li><li><a href="javascript:void(0)" data-value="car">Car</a></li></ul></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Location</h3><form role="form"><div class="form-group"><label for="inputdefault">Address:</label><input id="cur-address" class="form-control" type="text" value="Gates Computer Science, Stanford, CA, 94305"></div></form></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="dropmarker_button" type="button" class="btn btn-block btn-lg btn-success">Drop Marker</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><div id="map-canvas" class="image-map" style="width: 300px; height: 300px;"><h1>Loading map...</h1></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="share_button" type="button" class="btn btn-block btn-lg btn-success">Share</button></div></div>';
+    var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span> Back</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h1 class="text-center">Share Location</h1></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Time</h3><div class="btn-group btn-block"><button id="time_dropdown" type="button" class="btn btn-block btn-lg btn-primary dropdown-toggle" data-toggle="dropdown">Choose a duration  <span class="caret"></span></button><ul class="dropdown-menu" role="menu"><li><a href="javascript:void(0)" data-value="10" >10 Minutes</a></li><li><a href="javascript:void(0)" data-value="15">15 Minutes</a></li><li><a href="javascript:void(0)" data-value="30">30 Minutes</a></li><li><a href="javascript:void(0)" data-value="45">45 Minutes</a></li><li><a href="javascript:void(0)" data-value="60">60 Minutes</a></li><li><a href="javascript:void(0)" data-value="indefinite">Indefinite</a></li></ul></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Method of Travel (Optional)</h3><div class="btn-group btn-block"><button id="method_dropdown" type="button" class="btn btn-block btn-lg btn-primary dropdown-toggle" data-toggle="dropdown">No Method Selected <span class="caret"></span></button><ul class="dropdown-menu" role="menu"><li><a href="javascript:void(0)" data-value="Walk">Walk</a></li><li><a href="javascript:void(0)" data-value="Bike">Bike</a></li><li><a href="javascript:void(0)" data-value="Car">Car</a></li></ul></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Location</h3><form role="form"><div class="form-group"><label for="inputdefault">Address:</label><input id="cur-address" class="form-control" type="text" value="Gates Computer Science, Stanford, CA, 94305"></div></form></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="dropmarker_button" type="button" class="btn btn-block btn-lg btn-success">Drop Marker</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><div id="map-canvas" class="image-map" style="width: 300px; height: 300px;"><h1>Loading map...</h1></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="share_button" type="button" class="btn btn-block btn-lg btn-success">Share</button></div></div>';
     $("#app").append(HTMLCode);
     //Add event handlers
-    $("#back_button").click(showMainPage);
-    $("#share_button").click(showLocationPage);
     $(".dropdown-menu li a").click(function(){
         $(this).parents(".btn-group").find('.btn').text($(this).text());
         $(this).parents(".btn-group").find('.btn').val($(this).data('value'));
+    });
+    $("#back_button").click(showMainPage);
+    $("#share_button").click(function() {
+        var time = $('#time_dropdown')[0].value;
+        var method = $('#method_dropdown')[0].value;
+        if(method == "")
+            method = "N/A";
+        if(time == "") {
+            alert("Error! Please choose a time!");
+            showNewPage();
+        }
+        else if (!navigator.geolocation) {
+            alert("Browser does NOT support geolocation!");
+            showMainPage();
+        }
+        else {
+            //TODO: Get user id (temporary for now)
+            var omletID = omletIDPrincipal;
+            for(var i=0; i<omletDocument.user_data.length; i++) {
+                if(omletDocument.user_data[i].omletID == omletID) {
+                    omletDocument.user_data[i].sharing = true;
+                    omletDocument.user_data[i].travel_method = method;
+                    omletDocument.user_data[i].share_start_time = new Date().getTime();
+                    omletDocument.user_data[i].share_time = time;
+                    break;
+                }
+            }
+            //set Watchposition to update position
+            var options = {enableHighAccuracy: true};
+            watchPositionID = navigator.geolocation.watchPosition(positionUpdate, positionError, options);
+        }
     });
     
     //Add map functionality
@@ -74,14 +103,24 @@ function showLocationPage() {
     $("#app").append(HTMLCode);
     //Add event handlers
     $("#back_button").click(showMainPage);
-    $("#stopshare_button").click(showMainPage);
+    $("#stopshare_button").click(function() {
+        //TODO: Get user id (temporary for now)
+        var omletID = omletIDPrincipal;
+        for(var i=0; i<omletDocument.user_data.length; i++) {
+            if(omletDocument.user_data[i].omletID == omletID) {
+                omletDocument.user_data[i].sharing = false;
+                break;
+            }
+        }
+        showMainPage();
+    });
     var currentID = 0;
     if(omletDocument.user_data.length > 0) {
         //Set first thumbnail
         $("#thumbnailID").html(""); //Clear
         var info = omletDocument.user_data[0];
         var HTMLCode = "<h3>"+info.fullname+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
-                   "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p>";
+                   "<p style=\"font-weight:bold\">ETA: "+info.ETA+"</p>";
         $("#thumbnailID").html(HTMLCode);
     }
     else { //No users, mute both buttons
@@ -142,7 +181,7 @@ function showLocationPage() {
 }
 
 function showStatsPage(event) {
-    omletID = event.data;
+    var omletID = event.data;
     $("#app").html("");
     var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span>Back</button></div></div><div class="row clearfix" style="margin-top:20px"><div id="tableData" class="col-xs-12 column"></div></div>';
     $("#app").append(HTMLCode);
@@ -169,9 +208,78 @@ function showStatsPage(event) {
 }
 
 /* Helper functions */
+function positionUpdate(pos) {
+    //TODO: Get user id (temporary for now)
+    var omletID = omletIDPrincipal;
+    var curSharing;
+    var shareTime;
+    var startTime;
+    var timeExpired = false;
+    for(var i=0; i<omletDocument.user_data.length; i++) {
+        if(omletDocument.user_data[i].omletID == omletID) {
+            curSharing = omletDocument.user_data[i].sharing;
+            shareTime = omletDocument.user_data[i].share_time;
+            startTime = omletDocument.user_data[i].share_start_time;
+            break;
+        }
+    }
+    //Check for elapsed time
+    if(shareTime != "indefinite") {
+        var elapsedMS = (new Date().getTime()) - startTime;
+        if(elapsedMS > (parseInt(shareTime)*60*1000))
+            timeExpired = true;
+    }
+    if(!curSharing || timeExpired) { //Not sharing anymore, stop the watchPosition event
+        navigator.geolocation.clearWatch(watchPositionID);
+        watchPositionID = -1;
+        return;
+    }
+    else {
+        //Here we update the ETA and Location(Lat/Lng)
+        for(var i=0; i<omletDocument.user_data.length; i++) {
+            if(omletDocument.user_data[i].omletID == omletID) {
+                omletDocument.user_data[i].location.lat = pos.coords.latitute;
+                omletDocument.user_data[i].location.lng = pos.coords.longitude;
+                //Update ETA if necessary
+                if(omletDocument.user_data[i].travel_method != "N/A") {
+                    var origin = new google.maps.LatLng(pos.coords.latitute, pos.coords.longitude);
+                    var destination = new google.maps.LatLng(omletDocument.group_location.lat, omletDocument.group_location.lng);
+                    var service = new google.maps.DistanceMatrixService();
+                    var travelMode;
+                    if(omletDocument.user_data[i].travel_method == "Car")
+                        travelMode = google.maps.TravelMode.DRIVING;
+                    else if(omletDocument.user_data[i].travel_mode == "Bike")
+                        travelMode = google.maps.TravelMode.BICYCLING;
+                    else
+                        travelMode = google.maps.TravelMode.WALKING;
+                    service.getDistanceMatrix({"origins": [origin], "destinations": [destination], "travelMode": travelMode,}, ETAUpdate);
+                }
+                break;
+            }
+        }
+    }
+}
+
+function ETAUpdate(response, status) {
+    if (status == google.maps.DistanceMatrixStatus.OK) {
+        //TODO: Get user id (temporary for now)
+        var omletID = omletIDPrincipal;
+        for(var i=0; i<omletDocument.user_data.length; i++) {
+            if(omletDocument.user_data[i].omletID == omletID) {
+                omletDocument.user_data[i].ETA = response.rows[0].elements[0].duration.text;
+                break;
+            }
+        }
+    }
+}
+
+function positionError(err) {
+    console.warn('ERROR(' + err.code + '): ' + err.message);
+}
+
 //Reference: http://stackoverflow.com/questions/5688745/google-maps-v3-draggable-marker
 function reverseGeocodePosition(position) {
-    geocoder = new google.maps.Geocoder();
+    var geocoder = new google.maps.Geocoder();
     geocoder.geocode({ 'latLng': position }, function(results, status) {
         if (status == google.maps.GeocoderStatus.OK) {
             $("#cur-address").val(results[0].formatted_address);
@@ -180,7 +288,7 @@ function reverseGeocodePosition(position) {
 }
 
 function setDestination(position) {
-    geocoder = new google.maps.Geocoder();
+    var geocoder = new google.maps.Geocoder();
     geocoder.geocode({ 'latLng': position }, function(results, status) {
         if (status == google.maps.GeocoderStatus.OK) {
             $("#destination_text").text(results[0].formatted_address);
@@ -192,7 +300,7 @@ function setDestination(position) {
 }
 
 function geocodePosition(position, map, marker) {
-    geocoder = new google.maps.Geocoder();
+    var geocoder = new google.maps.Geocoder();
     geocoder.geocode({ 'address': position }, function(results, status) {
         if (status == google.maps.GeocoderStatus.OK) {
             marker.setPosition(results[0].geometry.location);
@@ -255,6 +363,8 @@ var omletDocument = {
             "fullname": "Kevin Han",
             "sharing": true,
             "share_start_time": 0,
+            "share_time": 0,
+            "travel_method": "N/A",
             "pinColor": "Red",
             "ETA": 2,
             "icon": "img/red-dot.png",
@@ -268,6 +378,8 @@ var omletDocument = {
             "fullname": "Gabriel Kho",
             "sharing": true,
             "share_start_time": 0,
+            "share_time": 0,
+            "travel_method": "N/A",
             "pinColor": "Green",
             "ETA": 4,
             "icon": "img/green-dot.png",
@@ -281,6 +393,8 @@ var omletDocument = {
             "fullname": "John Doe",
             "sharing": true,
             "share_start_time": 0,
+            "share_time": 0,
+            "travel_method": "N/A",
             "pinColor": "Blue",
             "ETA": 7,
             "icon": "img/blue-dot.png",
@@ -294,6 +408,8 @@ var omletDocument = {
             "fullname": "Jane Doe",
             "sharing": true,
             "share_start_time": 0,
+            "share_time": 0,
+            "travel_method": "N/A",
             "pinColor": "Yellow",
             "ETA": 3,
             "icon": "img/yellow-dot.png",
@@ -307,6 +423,8 @@ var omletDocument = {
             "fullname": "John Smith",
             "sharing": true,
             "share_start_time": 0,
+            "share_time": 0,
+            "travel_method": "N/A",
             "pinColor": "Purple",
             "ETA": 11,
             "icon": "img/purple-dot.png",
@@ -362,7 +480,15 @@ var stats = [
     }
 ];
 
+//Temporary ID
+var omletIDPrincipal = "khan";
+
 //Map icons
 var map_icons = ["Red", "Blue", "Green", "Yellow", "Orange", "Purple", "Pink", "Light Blue"];
 
 var color_to_icon = {"Red": "img/red-dot.png", "Purple": "img/purple-dot.png", "Pink": "img/pink-dot.png", "Orange": "img/orange-dot.png", "Light Blue": "img/ltblue-dot.png", "Green": "img/green-dot.png", "Blue": "img/blue-dot.png", "Yellow": "img/yellow-dot.png"};
+
+//Global variables for map/location update
+var watchPositionID = -1;
+var mapSetIntervalID = -1;
+var inLocationScreen = false;
