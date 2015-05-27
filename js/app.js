@@ -64,6 +64,7 @@ function showNewPage() {
             //set Watchposition to update position
             var options = {enableHighAccuracy: true};
             watchPositionID = navigator.geolocation.watchPosition(positionUpdate, positionError, options);
+            showLocationPage();
         }
     });
     
@@ -210,6 +211,8 @@ function showStatsPage(event) {
 /* Helper functions */
 function positionUpdate(pos) {
     //TODO: Get user id (temporary for now)
+    var tempLat = pos.coords.latitude;
+    var tempLng = pos.coords.longitude;
     var omletID = omletIDPrincipal;
     var curSharing;
     var shareTime;
@@ -238,11 +241,11 @@ function positionUpdate(pos) {
         //Here we update the ETA and Location(Lat/Lng)
         for(var i=0; i<omletDocument.user_data.length; i++) {
             if(omletDocument.user_data[i].omletID == omletID) {
-                omletDocument.user_data[i].location.lat = pos.coords.latitute;
-                omletDocument.user_data[i].location.lng = pos.coords.longitude;
+                omletDocument.user_data[i].location.lat = tempLat;
+                omletDocument.user_data[i].location.lng = tempLng;
                 //Update ETA if necessary
                 if(omletDocument.user_data[i].travel_method != "N/A") {
-                    var origin = new google.maps.LatLng(pos.coords.latitute, pos.coords.longitude);
+                    var origin = new google.maps.LatLng(tempLat, tempLng);
                     var destination = new google.maps.LatLng(omletDocument.group_location.lat, omletDocument.group_location.lng);
                     var service = new google.maps.DistanceMatrixService();
                     var travelMode;
@@ -252,7 +255,7 @@ function positionUpdate(pos) {
                         travelMode = google.maps.TravelMode.BICYCLING;
                     else
                         travelMode = google.maps.TravelMode.WALKING;
-                    service.getDistanceMatrix({"origins": [origin], "destinations": [destination], "travelMode": travelMode,}, ETAUpdate);
+                    service.getDistanceMatrix({"origins": [origin], "destinations": [destination], "travelMode": travelMode}, ETAUpdate);
                 }
                 break;
             }
