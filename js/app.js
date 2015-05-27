@@ -1,10 +1,13 @@
 // Entry into page (will most likely be replaced by Omlet.ready function
 $(document).ready(function(){
+    //Initialization call to parse
+    Parse.initialize("QkXw7fBPJI2f3DpSlP17JaLwjct7mSlAglW921ZD", "Sgpsbwn4Ad8OGmKbZ1wgfMXo0TEtQlaaCCdmFoWX");
     showMainPage();
 });
 
 function showMainPage() {
     $("#app").html("");
+    parseGet();
     var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h1 class="text-center">Pinpoint</h1><img class="image-pp-logo" src="img/pinpoint-logo.jpg" class="img-rounded"></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="share_button" type="button" class="btn btn-block btn-lg btn-primary">Start Sharing Location</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="viewmap_button" type="button" class="btn btn-block btn-primary btn-lg">View Map</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Participants</h3><table class="table table-bordered"><thead><tr><th>#</th><th>Name</th><th>Currently Sharing Location?</th><th>Statistics (Click to view)</th></tr></thead><tbody id="tabledata"></tbody></table></div></div>';
     $("#app").append(HTMLCode);
     //Add event handlers
@@ -190,13 +193,7 @@ function showStatsPage(event) {
     $("#back_button").click(showMainPage);
     //Generate Table Data
     //Find username in stats
-    var info;
-    for(var i=0; i<stats.length; i++) {
-        if(stats[i].omletID == omletID) {
-            info = stats[i];
-            break;
-        }
-    }
+    var info = localstats[omletID];
     var HTMLTableCode = "<table id=\"tableData\" class=\"table table-bordered\"><tbody>" +
                         "<tr><td style=\"font-weight:bold\">Name</td><td>"+info.fullName+"</td></tr>" +
                         "<tr><td style=\"font-weight:bold\">Total Number of Trips</td><td>"+info.numTrips+"</td></tr>" +
@@ -352,6 +349,65 @@ function updateMap() {
     }
 }
 
+function parseAddUser(omletID, fullName) {
+    var Stats = Parse.Object.extend("Stats");
+    var query = new Parse.Query(Stats);
+    query.get("FCp1oHcDNh", {
+        success: function(stats) {
+            var placeholder = {"omletID": omletID, "fullName": fullName, "numTrips": 0,
+                       "onTimeTrips": 0, "onTimePct": 0, "OMDEarned": 0};
+            stats.set(omletID, placeholder);
+            stats.save();
+        },
+        error: function(object, error) {
+            alert(error);
+        }
+    });
+}
+
+function parseRemoveUser(omletID) { //Sets column to undefined
+    var Stats = Parse.Object.extend("Stats");
+    var query = new Parse.Query(Stats);
+    query.get("FCp1oHcDNh", {
+        success: function(stats) {
+            stats.unset(omletID);
+            stats.save();
+        },
+        error: function(object, error) {
+            alert(error);
+        }
+    });
+}
+
+function parseUpdate(omletID, key, value) {
+    var Stats = Parse.Object.extend("Stats");
+    var query = new Parse.Query(Stats);
+    query.get("FCp1oHcDNh", {
+        success: function(stats) {
+            var tempStats = stats.get(omletID);
+            tempStats[key] = value;
+            stats.set(omletID, tempStats);
+            stats.save();
+        },
+        error: function(object, error) {
+            alert(error);
+        }
+    });
+}
+
+function parseGet() { //Update stats database, fired every time we visit the main page
+    var Stats = Parse.Object.extend("Stats");
+    var query = new Parse.Query(Stats);
+    query.get("FCp1oHcDNh", {
+        success: function(stats) {
+            localstats = stats.toJSON();
+        },
+        error: function(object, error) {
+            alert(error);
+        }
+    });
+}
+
 /* Temporary JSON/Database files */
 //Will be replaced by global Omlet JSON document
 var omletDocument = {
@@ -439,49 +495,7 @@ var omletDocument = {
     ]
 };
 
-//Will be replaced by Parse
-var stats = [
-    {
-        "omletID": "khan",
-        "fullName": "Kevin Han",
-        "numTrips": 50,
-        "onTimeTrips": 39,
-        "onTimePct": 78.0,
-        "OMDEarned": 3900
-    },
-    {
-        "omletID": "gkho",
-        "fullName": "Gabriel Kho",
-        "numTrips": 40,
-        "onTimeTrips": 35,
-        "onTimePct": 87.5,
-        "OMDEarned": 3500
-    },
-    {
-        "omletID": "jhdoe",
-        "fullName": "John Doe",
-        "numTrips": 36,
-        "onTimeTrips": 27,
-        "onTimePct": 75.0,
-        "OMDEarned": 2700
-    },
-    {
-        "omletID": "jndoe",
-        "fullName": "Jane Doe",
-        "numTrips": 38,
-        "onTimeTrips": 36,
-        "onTimePct": 94.7,
-        "OMDEarned": 3600
-    },
-    {
-        "omletID": "jsmith",
-        "fullName": "John Smith",
-        "numTrips": 150,
-        "onTimeTrips": 10,
-        "onTimePct": 6.7,
-        "OMDEarned": 1000
-    }
-];
+var localstats; //Local Parse Object
 
 //Temporary ID
 var omletIDPrincipal = "khan";
