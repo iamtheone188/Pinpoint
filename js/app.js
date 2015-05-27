@@ -6,6 +6,7 @@ $(document).ready(function(){
 });
 
 function showMainPage() {
+    inLocationScreen = false;
     $("#app").html("");
     parseGet();
     var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h1 class="text-center">Pinpoint</h1><img class="image-pp-logo" src="img/pinpoint-logo.jpg" class="img-rounded"></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="share_button" type="button" class="btn btn-block btn-lg btn-primary">Start Sharing Location</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="viewmap_button" type="button" class="btn btn-block btn-primary btn-lg">View Map</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Participants</h3><table class="table table-bordered"><thead><tr><th>#</th><th>Name</th><th>Currently Sharing Location?</th><th>Statistics (Click to view)</th></tr></thead><tbody id="tabledata"></tbody></table></div></div>';
@@ -30,6 +31,7 @@ function showMainPage() {
 }
 
 function showNewPage() {
+    inLocationScreen = false;
     $("#app").html("");
     var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span> Back</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h1 class="text-center">Share Location</h1></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Time</h3><div class="btn-group btn-block"><button id="time_dropdown" type="button" class="btn btn-block btn-lg btn-primary dropdown-toggle" data-toggle="dropdown">Choose a duration  <span class="caret"></span></button><ul class="dropdown-menu" role="menu"><li><a href="javascript:void(0)" data-value="10" >10 Minutes</a></li><li><a href="javascript:void(0)" data-value="15">15 Minutes</a></li><li><a href="javascript:void(0)" data-value="30">30 Minutes</a></li><li><a href="javascript:void(0)" data-value="45">45 Minutes</a></li><li><a href="javascript:void(0)" data-value="60">60 Minutes</a></li><li><a href="javascript:void(0)" data-value="indefinite">Indefinite</a></li></ul></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Method of Travel (Optional)</h3><div class="btn-group btn-block"><button id="method_dropdown" type="button" class="btn btn-block btn-lg btn-primary dropdown-toggle" data-toggle="dropdown">No Method Selected <span class="caret"></span></button><ul class="dropdown-menu" role="menu"><li><a href="javascript:void(0)" data-value="Walk">Walk</a></li><li><a href="javascript:void(0)" data-value="Bike">Bike</a></li><li><a href="javascript:void(0)" data-value="Car">Car</a></li></ul></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Location</h3><form role="form"><div class="form-group"><label for="inputdefault">Address:</label><input id="cur-address" class="form-control" type="text" value="Gates Computer Science, Stanford, CA, 94305"></div></form></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="dropmarker_button" type="button" class="btn btn-block btn-lg btn-success">Drop Marker</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><div id="map-canvas" class="image-map" style="width: 300px; height: 300px;"><h1>Loading map...</h1></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="share_button" type="button" class="btn btn-block btn-lg btn-success">Share</button></div></div>';
     $("#app").append(HTMLCode);
@@ -102,6 +104,7 @@ function showNewPage() {
 }
 
 function showLocationPage() {
+    inLocationScreen = true;
     $("#app").html("");
     var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span> Back</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-1 column"><div class="thumbnail thumb-center"><a id="leftClick" href="#"><span id="leftIcon" class="glyphicon glyphicon-chevron-left text-muted"></span></a></div></div><div class="col-xs-9 column"><div id="thumbnailID" class="thumbnail"><h1>No Users/Loading...</h1></div></div><div class="col-xs-2 column"><div class="thumbnail thumb-center"><a id="rightClick" href="#"><span id="rightIcon" class="glyphicon glyphicon-chevron-right"></span></a></div></div></div><hr \><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><div class="panel panel-info"><div class="panel-heading"><h2 class="text-center">Destination:</h2><h3 id="destination_text" class="text-center"></h3></div></div></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><div id="map-canvas" class="image-map" style="width: 300px; height: 300px;"><h1>Loading map...</h1></div></div></div><hr \><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="checkin_button" type="button" class="btn btn-block btn-lg btn-success disabled">Check In</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="stopshare_button" type="button" class="btn btn-block btn-lg btn-danger">Stop Sharing Location</button></div></div>';
     $("#app").append(HTMLCode);
@@ -178,13 +181,16 @@ function showLocationPage() {
         $("#destination_text").val('Not Set');
     }
     
-    //Now we call the update methods to update map
+    //Now we call the update methods to update map (Center at destination)
     updateMap();
     //Register periodic event (setInterval, don't forget to clearInterval on any page button press (back, stop sharing)
-    
+    if(mapSetIntervalID == -1) {
+        mapSetIntervalID = setInterval(updateMapHandler, 10000);
+    }
 }
 
 function showStatsPage(event) {
+    inLocationScreen = false;
     var omletID = event.data;
     $("#app").html("");
     var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="back_button" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-chevron-left"></span>Back</button></div></div><div class="row clearfix" style="margin-top:20px"><div id="tableData" class="col-xs-12 column"></div></div>';
@@ -307,6 +313,19 @@ function geocodePosition(position, map, marker) {
             map.panTo(results[0].geometry.location);
         }
     });
+}
+
+function updateMapHandler() {
+    if(!inLocationScreen) { //clearInterval
+        clearInterval(mapSetIntervalID);
+        mapSetIntervalID = -1;
+    }
+    else {
+        //Try to catch scenario where we leave location screen during map update
+        if($('#map-canvas').length) {
+            updateMap();
+        }
+    }
 }
 
 function updateMap() {
