@@ -119,6 +119,10 @@ function showLocationPage() {
                 break;
             }
         }
+        clearInterval(mapSetIntervalID);
+        mapSetIntervalID = -1;
+        mapInstance = null;
+        markersArray = []
         showMainPage();
     });
     var currentID = 0;
@@ -180,9 +184,11 @@ function showLocationPage() {
     else {
         $("#destination_text").val('Not Set');
     }
-    
-    //Now we call the update methods to update map (Center at destination)
-    updateMap();
+    //If map doesn't exist, create it (Center at destination)
+    if(mapInstance == undefined || mapInstance == null)
+        mapInstance = createMap();
+    //Now we call the update methods to update map
+    updateMap(mapInstance);
     //Register periodic event (setInterval, don't forget to clearInterval on any page button press (back, stop sharing)
     if(mapSetIntervalID == -1) {
         mapSetIntervalID = setInterval(updateMapHandler, 10000);
@@ -319,44 +325,27 @@ function updateMapHandler() {
     if(!inLocationScreen) { //clearInterval
         clearInterval(mapSetIntervalID);
         mapSetIntervalID = -1;
+        mapInstance = null;
+        markersArray = []
     }
     else {
         //Try to catch scenario where we leave location screen during map update
         if($('#map-canvas').length) {
-            updateMap();
+            updateMap(mapInstance);
         }
     }
 }
 
-function updateMap() {
-    //Add/replace map and markers
+function createMap() {
     $("#map-canvas").html("");
+    var map;
     if(omletDocument.group_location.present) { //Location sharing started
         var mapOptions = {
             center: new google.maps.LatLng(omletDocument.group_location.lat, omletDocument.group_location.lng),
             zoom: 17,
             mapTypeId: google.maps.MapTypeId.ROADMAP
         };
-        var map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
-        // Place a destination marker on the map
-        var marker1 = new google.maps.Marker({
-            position: new google.maps.LatLng(omletDocument.group_location.lat, omletDocument.group_location.lng),
-            map: map,
-            icon: 'img/red-pushpin.png',
-            title:"Destination"
-        });
-        marker1.setMap(map);
-        for(var i=0; i<omletDocument.user_data.length; i++) {
-            if(omletDocument.user_data[i].sharing) {
-                var tempMarker = new google.maps.Marker({
-                    position: new google.maps.LatLng(omletDocument.user_data[i].location.lat, omletDocument.user_data[i].location.lng),
-                    map: map,
-                    icon: omletDocument.user_data[i].icon,
-                    title: omletDocument.user_data[i].fullname
-                });
-                tempMarker.setMap(map);
-            }
-        }
+        map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
     }
     else {
         var mapOptions = { //Show an empty map
@@ -364,7 +353,38 @@ function updateMap() {
             zoom: 4,
             mapTypeId: google.maps.MapTypeId.ROADMAP
         };
-        var map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+        map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
+    }
+    return map;
+}
+
+function updateMap(map) {
+    //Remove current destination markers
+    for(var i=0; i<markersArray.length; i++) {
+        markersArray[i].setMap(null);
+    }
+    markersArray = [];
+    
+    // Place destinations marker on the map
+    var marker1 = new google.maps.Marker({
+        position: new google.maps.LatLng(omletDocument.group_location.lat, omletDocument.group_location.lng),
+        map: map,
+        icon: 'img/red-pushpin.png',
+        title:"Destination"
+    });
+    marker1.setMap(map);
+    markersArray.push(marker1);
+    for(var i=0; i<omletDocument.user_data.length; i++) {
+        if(omletDocument.user_data[i].sharing) {
+            var tempMarker = new google.maps.Marker({
+                position: new google.maps.LatLng(omletDocument.user_data[i].location.lat, omletDocument.user_data[i].location.lng),
+                map: map,
+                icon: omletDocument.user_data[i].icon,
+                title: omletDocument.user_data[i].fullname
+            });
+            tempMarker.setMap(map);
+            markersArray.push(tempMarker);
+        }
     }
 }
 
@@ -528,3 +548,5 @@ var color_to_icon = {"Red": "img/red-dot.png", "Purple": "img/purple-dot.png", "
 var watchPositionID = -1;
 var mapSetIntervalID = -1;
 var inLocationScreen = false;
+var mapInstance = null;
+var markersArray = [];
