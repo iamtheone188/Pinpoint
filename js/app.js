@@ -125,6 +125,14 @@ function showLocationPage() {
         markersArray = []
         showMainPage();
     });
+    if(checkInEnabled) { //Enable the check in button and add functionality
+        $("#checkin_button").removeClass("disabled");
+        $("#checkin_button").click(function() {
+            checkInUpdate();
+        });
+    }
+    else
+        $("#checkin_button").addClass("disabled");
     var currentID = 0;
     if(omletDocument.user_data.length > 0) {
         //Set first thumbnail
@@ -252,20 +260,18 @@ function positionUpdate(pos) {
             if(omletDocument.user_data[i].omletID == omletID) {
                 omletDocument.user_data[i].location.lat = tempLat;
                 omletDocument.user_data[i].location.lng = tempLng;
-                //Update ETA if necessary
-                if(omletDocument.user_data[i].travel_method != "N/A") {
-                    var origin = new google.maps.LatLng(tempLat, tempLng);
-                    var destination = new google.maps.LatLng(omletDocument.group_location.lat, omletDocument.group_location.lng);
-                    var service = new google.maps.DistanceMatrixService();
-                    var travelMode;
-                    if(omletDocument.user_data[i].travel_method == "Car")
-                        travelMode = google.maps.TravelMode.DRIVING;
-                    else if(omletDocument.user_data[i].travel_mode == "Bike")
-                        travelMode = google.maps.TravelMode.BICYCLING;
-                    else
-                        travelMode = google.maps.TravelMode.WALKING;
-                    service.getDistanceMatrix({"origins": [origin], "destinations": [destination], "travelMode": travelMode}, ETAUpdate);
-                }
+                //Update ETA and check in button
+                var origin = new google.maps.LatLng(tempLat, tempLng);
+                var destination = new google.maps.LatLng(omletDocument.group_location.lat, omletDocument.group_location.lng);
+                var service = new google.maps.DistanceMatrixService();
+                var travelMode;
+                if(omletDocument.user_data[i].travel_method == "Car")
+                    travelMode = google.maps.TravelMode.DRIVING;
+                else if(omletDocument.user_data[i].travel_mode == "Bike")
+                    travelMode = google.maps.TravelMode.BICYCLING;
+                else
+                    travelMode = google.maps.TravelMode.WALKING;
+                service.getDistanceMatrix({"origins": [origin], "destinations": [destination], "travelMode": travelMode}, ETAUpdate);
                 break;
             }
         }
@@ -278,8 +284,27 @@ function ETAUpdate(response, status) {
         var omletID = omletIDPrincipal;
         for(var i=0; i<omletDocument.user_data.length; i++) {
             if(omletDocument.user_data[i].omletID == omletID) {
-                omletDocument.user_data[i].ETA = response.rows[0].elements[0].duration.text;
-                break;
+                if(omletDocument.user_data[i].travel_method != "N/A") {
+                    omletDocument.user_data[i].ETA = response.rows[0].elements[0].duration.text;
+                    break;
+                }
+            }
+        }
+        //Now check to see if user is 100 meters from destination, in which case, enable check in button
+        if(response.rows[0].elements[0].distance.value <= 100) {
+            checkInEnabled = true;
+            if(inLocationScreen) {
+                $("#checkin_button").removeClass("disabled");
+                $("#checkin_button").click(function() {
+                    checkInUpdate();
+                });
+            }
+        }
+        else {
+            checkInEnabled = false;
+            
+            if(inLocationScreen) {
+                $("#checkin_button").addClass("disabled");
             }
         }
     }
@@ -386,6 +411,10 @@ function updateMap(map) {
             markersArray.push(tempMarker);
         }
     }
+}
+
+function checkInUpdate() {
+    console.log("TODO");
 }
 
 function parseAddUser(omletID, fullName) {
@@ -550,3 +579,4 @@ var mapSetIntervalID = -1;
 var inLocationScreen = false;
 var mapInstance = null;
 var markersArray = [];
+var checkInEnabled = false;
