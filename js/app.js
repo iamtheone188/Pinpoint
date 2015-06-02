@@ -8,7 +8,7 @@ $(document).ready(function(){
 function showMainPage() {
     inLocationScreen = false;
     $("#app").html("");
-    parseGet();
+    parseGetStats();
     var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h1 class="text-center">Pinpoint</h1><img class="image-pp-logo" src="img/pinpoint-logo.jpg" class="img-rounded"></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="share_button" type="button" class="btn btn-block btn-lg btn-primary">Start Sharing Location</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><button id="viewmap_button" type="button" class="btn btn-block btn-primary btn-lg">View Map</button></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3 class="text-center">Participants</h3><table class="table table-bordered"><thead><tr><th>#</th><th>Name</th><th>Currently Sharing Location?</th><th>Statistics (Click to view)</th></tr></thead><tbody id="tabledata"></tbody></table></div></div>';
     $("#app").append(HTMLCode);
     //Add event handlers
@@ -614,7 +614,7 @@ function parseIncrement(omletID, key) {
     });
 }
 
-function parseGet() { //Update stats database, fired every time we visit the main page
+function parseGetStats() { //Update stats database, fired every time we visit the main page
     var Stats = Parse.Object.extend("Stats");
     var query = new Parse.Query(Stats);
     query.get("FCp1oHcDNh", {
