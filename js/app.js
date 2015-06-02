@@ -29,7 +29,19 @@ function showMainPage() {
         $("#"+omletDocument['user_data'][i]['omletID']+"_button").click(omletDocument['user_data'][i]['omletID'], showStatsPage);
     }
     
-    
+    //Disable share button if user is sharing his/her location
+    //TODO: Get user id (temporary for now)
+    var omletID = omletIDPrincipal;
+    var isUserSharing = false;
+    for(var i=0; i<omletDocument.user_data.length; i++) {
+        if(omletDocument.user_data[i].omletID == omletID) {
+            if(omletDocument.user_data[i].sharing)
+                isUserSharing = true;
+            break;
+        }
+    }
+    if(isUserSharing)
+        $("#share_button").addClass('hidden');
 }
 
 function showNewPage() {
@@ -161,12 +173,14 @@ function showLocationPage() {
         mapSetIntervalID = -1;
         mapInstance = null;
         markersArray = []
+        stopShareCheck();
         showMainPage();
     });
     if(checkInEnabled) { //Enable the check in button and add functionality
         $("#checkin_button").removeClass("disabled");
         $("#checkin_button").click(function() {
             checkInUpdate();
+            stopShareCheck();
         });
     }
     else
@@ -233,12 +247,28 @@ function showLocationPage() {
     //If map doesn't exist, create it (Center at destination)
     if(mapInstance == undefined || mapInstance == null)
         mapInstance = createMap();
+    else
+        recreateMap(mapInstance);
     //Now we call the update methods to update map
     updateMap(mapInstance);
     //Register periodic event (setInterval, don't forget to clearInterval on any page button press (back, stop sharing)
     if(mapSetIntervalID == -1) {
         mapSetIntervalID = setInterval(updateMapHandler, 10000);
     }
+    
+    //Disable stop share button if user is NOT sharing his/her location
+    //TODO: Get user id (temporary for now)
+    var omletID = omletIDPrincipal;
+    var isUserSharing = false;
+    for(var i=0; i<omletDocument.user_data.length; i++) {
+        if(omletDocument.user_data[i].omletID == omletID) {
+            if(omletDocument.user_data[i].sharing)
+                isUserSharing = true;
+            break;
+        }
+    }
+    if(!isUserSharing)
+        $("#stopshare_button").addClass('hidden');
 }
 
 function showStatsPage(event) {
@@ -385,7 +415,7 @@ function updateMapHandler() {
     }
     else {
         //Try to catch scenario where we leave location screen during map update
-        if($('#map-canvas').length) {
+        if(document.getElementById('map-canvas') != null) {
             updateMap(mapInstance);
         }
     }
@@ -411,6 +441,16 @@ function createMap() {
         map = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
     }
     return map;
+}
+
+function recreateMap() {
+    $("#map-canvas").html("");
+    var mapOptions = {
+        center: mapInstance.getCenter(),
+        zoom: mapInstance.getZoom(),
+        mapTypeId: mapInstance.getMapTypeId()
+    };
+    mapInstance = new google.maps.Map(document.getElementById("map-canvas"), mapOptions);
 }
 
 function updateMap(map) {
@@ -445,6 +485,28 @@ function updateMap(map) {
 
 function checkInUpdate() {
     console.log("TODO");
+}
+
+//If no one in the chat is sharing anymore, clear group_location
+function stopShareCheck() {
+    var allStopped = true;
+    //Replace with Omlet Global Document
+    for(var i=0; i<omletDocument.user_data.length; i++) {
+        if(omletDocument.user_data[i].sharing) {
+            allStopped = false;
+            break;
+        }
+    }
+    if(allStopped) { //Clear group_location (set to default values)
+        omletDocument.group_location = {
+            "present": false,
+            "start_time": 0,
+            "share_time": 0,
+            "lat": 0,
+            "lng": 0,
+            "address_string": ""
+        };
+    }
 }
 
 function parseAddUser(omletID, fullName) {
@@ -528,17 +590,16 @@ var omletDocument = {
     "group_location": {
         "present": false,
         "start_time": 0,
-        "share_time": 75,
-        "lat": 37.430152,
-        "lng": -122.173496,
+        "share_time": 0,
+        "lat": 0,
+        "lng": 0,
         "address_string": ""
-        //"address_string": "Gates Computer Science, Stanford, CA, 94305"
     },
     "user_data": [
         {
             "omletID": "khan",
             "fullname": "Kevin Han",
-            "sharing": true,
+            "sharing": false,
             "travel_method": "N/A",
             "pinColor": "Red",
             "ETA": 2,
