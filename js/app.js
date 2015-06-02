@@ -33,14 +33,17 @@ function showMainPage() {
     //TODO: Get user id (temporary for now)
     var omletID = omletIDPrincipal;
     var isUserSharing = false;
+    var userArrived = false;
     for(var i=0; i<omletDocument.user_data.length; i++) {
         if(omletDocument.user_data[i].omletID == omletID) {
             if(omletDocument.user_data[i].sharing)
                 isUserSharing = true;
+            if(omletDocument.user_data[i].arrived)
+                userArrived = true;
             break;
         }
     }
-    if(isUserSharing)
+    if(isUserSharing || userArrived)
         $("#share_button").addClass('hidden');
 }
 
@@ -191,7 +194,7 @@ function showLocationPage() {
         $("#thumbnailID").html(""); //Clear
         var info = omletDocument.user_data[0];
         var HTMLCode = "<h3>"+info.fullname+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
-                   "<p style=\"font-weight:bold\">ETA: "+info.ETA+"</p>";
+                   "<p style=\"font-weight:bold\">ETA: "+info.ETA+"</p><p style=\"font-weight:bold\">Arrived at Destination: "+info.arrived+"</p>";
         $("#thumbnailID").html(HTMLCode);
     }
     else { //No users, mute both buttons
@@ -212,7 +215,7 @@ function showLocationPage() {
             
             //Replace HTML
             var HTMLCode = "<h3>"+info.fullname+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
-                       "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p>";
+                       "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p><p style=\"font-weight:bold\">Arrived at Destination: "+info.arrived+"</p>";
             $("#thumbnailID").html(""); //Clear
             $("#thumbnailID").html(HTMLCode);
         }
@@ -231,7 +234,7 @@ function showLocationPage() {
             
             //Replace HTML
             var HTMLCode = "<h3>"+info.fullname+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
-                       "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p>";
+                       "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p><p style=\"font-weight:bold\">Arrived at Destination: "+info.arrived+"</p>";
             $("#thumbnailID").html(""); //Clear
             $("#thumbnailID").html(HTMLCode);
         }
@@ -348,8 +351,9 @@ function ETAUpdate(response, status) {
                 }
             }
         }
-        //Now check to see if user is 100 meters from destination, in which case, enable check in button
-        if(response.rows[0].elements[0].distance.value <= 100) {
+        //Now check to see if user is less than 250 meters from destination, in which case, enable check in button
+        console.log(response.rows[0].elements[0].distance.value);
+        if(response.rows[0].elements[0].distance.value <= 250) {
             checkInEnabled = true;
             if(inLocationScreen) {
                 $("#checkin_button").removeClass("disabled");
@@ -484,7 +488,29 @@ function updateMap(map) {
 }
 
 function checkInUpdate() {
-    console.log("TODO");
+    //TODO: Get user id (temporary for now)
+    var omletID = omletIDPrincipal;
+    //Set arrived and stop sharing
+    for(var i=0; i<omletDocument.user_data.length; i++) {
+        if(omletDocument.user_data[i].omletID == omletID) {
+            omletDocument.user_data[i].arrived = true;
+            omletDocument.user_data[i].sharing = false;
+        }
+    }
+    //Now check to see if user was on time
+    var userOnTime = false;
+    var curTime = new Date().getTime();
+    var expiredTime = omletDocument.group_location.start_time + (omletDocument.group_location.share_time * 60 * 1000);
+    if(curTime < expiredTime)
+        userOnTime = true;
+    if(userOnTime) {
+        alert("Congratulations! You've arrived on time! Have 100 Omlet dollars!");
+        parseIncrement(omletID, 'onTimeTrips');
+        parseAddOmletDollars(omletID);
+    }
+    $("#stopshare_button").addClass('hidden');
+    $("#checkin_button").addClass('hidden');
+    checkInEnabled = false;
 }
 
 //If no one in the chat is sharing anymore, clear group_location
@@ -555,6 +581,23 @@ function parseUpdate(omletID, key, value) {
     });
 }
 
+function parseAddOmletDollars(omletID) {
+    var key = "OMDEarned";
+    var Stats = Parse.Object.extend("Stats");
+    var query = new Parse.Query(Stats);
+    query.get("FCp1oHcDNh", {
+        success: function(stats) {
+            var tempStats = stats.get(omletID);
+            tempStats[key] += 100;
+            stats.set(omletID, tempStats);
+            stats.save();
+        },
+        error: function(object, error) {
+            alert(error);
+        }
+    });
+}
+
 function parseIncrement(omletID, key) {
     var Stats = Parse.Object.extend("Stats");
     var query = new Parse.Query(Stats);
@@ -604,6 +647,7 @@ var omletDocument = {
             "pinColor": "Red",
             "ETA": 2,
             "icon": "img/red-dot.png",
+            "arrived": false,
             "location": {
                 "lat": 37.427917,
                 "lng": -122.174294
@@ -617,6 +661,7 @@ var omletDocument = {
             "pinColor": "Green",
             "ETA": 4,
             "icon": "img/green-dot.png",
+            "arrived": false,
             "location": {
                 "lat": 37.429422,
                 "lng": -122.173869
@@ -630,6 +675,7 @@ var omletDocument = {
             "pinColor": "Blue",
             "ETA": 7,
             "icon": "img/blue-dot.png",
+            "arrived": false,
             "location": {
                 "lat": 37.429291,
                 "lng": -122.172210
@@ -643,6 +689,7 @@ var omletDocument = {
             "pinColor": "Yellow",
             "ETA": 3,
             "icon": "img/yellow-dot.png",
+            "arrived": false,
             "location": {
                 "lat": 37.428204,
                 "lng": -122.175624
@@ -656,6 +703,7 @@ var omletDocument = {
             "pinColor": "Purple",
             "ETA": 11,
             "icon": "img/purple-dot.png",
+            "arrived": false,
             "location": {
                 "lat": 37.431905,
                 "lng": -122.175787
