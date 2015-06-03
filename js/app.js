@@ -2,10 +2,42 @@
 $(document).ready(function(){
     //Initialization call to parse
     Parse.initialize("QkXw7fBPJI2f3DpSlP17JaLwjct7mSlAglW921ZD", "Sgpsbwn4Ad8OGmKbZ1wgfMXo0TEtQlaaCCdmFoWX");
-    showMainPage();
+    var databaseExists = false;
+    if(getParam('omletID') == null || getParam('parseDB') == null)
+        showErrorPage();
+    else {
+        omletIDPrincipal = getParam('omletID');
+        parseDBID = getParam('parseDB');
+        //Initial pull of database
+        parseUpdateOmletDocument(parseDBID, omletIDPrincipal, true);
+    } 
 });
 
-function showMainPage() {
+function pinpointInitialize() {
+    setInterval(parseUpdateOmletDocument, 7000, parseDBID, omletIDPrincipal, false); //Periodic Parse Update Event
+    if(!(omletIDPrincipal in omletDocument)) {
+        //Create new user
+        if(omletDocument.users_.length < 8) {
+            parseAddUserOmletDocument(parseDBID, omletIDPrincipal);
+        }
+        else
+            showErrorPage();
+    }
+    else
+        showMainPage();
+}
+
+function showErrorPage() {
+    inLocationScreen = false;
+    $("#app").html("");
+    var HTMLCode = '<div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h1 class="text-center">Pinpoint</h1><img class="image-pp-logo" src="img/pinpoint-logo.jpg" class="img-rounded"></div></div><div class="row clearfix" style="margin-top:20px"><div class="col-xs-12 column"><h3>Error! No parseDB and omletID detected! Please use the link given to you from the Omlet Chat! If you are using that link and you are still seeing this message, then the number of users has been exceeded (max 8).</h3></div></div>'
+    $("#app").append(HTMLCode);
+}
+
+function showMainPage(newUserFlag) {
+    if(newUserFlag == undefined)
+        newUserFlag = false;
+    
     inLocationScreen = false;
     $("#app").html("");
     parseGetStats();
@@ -16,17 +48,23 @@ function showMainPage() {
     $("#viewmap_button").click(showLocationPage);
     $("#tabledata").html("");
     //Generate Table Data
-    for(var i=0; i<omletDocument['user_data'].length; i++) {
-        if(omletDocument['user_data'][i]['sharing']) {
-            $("#tabledata").append('<tr><td>'+(i+1)+'</td><td>'+omletDocument['user_data'][i]['fullname']+'</td><td>True</td><td><button id="'+omletDocument['user_data'][i]['omletID']+'_button" type="button" class="btn btn-primary">View</button></td></tr>');
-        }
-        else {
-            $("#tabledata").append('<tr><td>'+(i+1)+'</td><td>'+omletDocument['user_data'][i]['fullname']+'</td><td>False</td><td><button id="'+omletDocument['user_data'][i]['omletID']+'_button" type="button" class="btn btn-primary">View</button></td></tr>');
+    var i = 0;
+    for(var key in omletDocument) {
+        if(omletDocument.hasOwnProperty(key) && key != 'group_location_' && key != 'users_' && key != 'objectId' && key != 'createdAt' && key != 'updatedAt') {
+            if(omletDocument[key]['sharing']) {
+                $("#tabledata").append('<tr><td>'+(i+1)+'</td><td>'+omletDocument[key]['omletID']+'</td><td>True</td><td><button id="'+omletDocument[key]['omletID']+'_button" type="button" class="btn btn-primary">View</button></td></tr>');
+            }
+            else {
+                $("#tabledata").append('<tr><td>'+(i+1)+'</td><td>'+omletDocument[key]['omletID']+'</td><td>False</td><td><button id="'+omletDocument[key]['omletID']+'_button" type="button" class="btn btn-primary">View</button></td></tr>');
+            }
+            i++;
         }
     }
     //Add table button links
-    for(var i=0; i<omletDocument['user_data'].length; i++) {
-        $("#"+omletDocument['user_data'][i]['omletID']+"_button").click(omletDocument['user_data'][i]['omletID'], showStatsPage);
+    for(var key in omletDocument) {
+        if(omletDocument.hasOwnProperty(key) && key != 'group_location_' && key != 'users_' && key != 'objectId' && key != 'createdAt' && key != 'updatedAt') {
+            $("#"+omletDocument[key]['omletID']+"_button").click(omletDocument[key]['omletID'], showStatsPage);
+        }
     }
     
     //Disable share button if user is sharing his/her location
@@ -34,13 +72,13 @@ function showMainPage() {
     var omletID = omletIDPrincipal;
     var isUserSharing = false;
     var userArrived = false;
-    for(var i=0; i<omletDocument.user_data.length; i++) {
-        if(omletDocument.user_data[i].omletID == omletID) {
-            if(omletDocument.user_data[i].sharing)
-                isUserSharing = true;
-            if(omletDocument.user_data[i].arrived)
-                userArrived = true;
-            break;
+    if(!newUserFlag) { //If new user, we don't need this check
+        if(omletID in omletDocument) {
+            isUserSharing = omletDocument[omletID].sharing;
+            userArrived = omletDocument[omletID].arrived;
+        }
+        else {
+            alert("Error! OmletID not found in Document! (showMainPage)");
         }
     }
     if(isUserSharing || userArrived)
@@ -93,14 +131,14 @@ function showNewPage() {
     });
     
     //If location has already been specified by another group member (present = true), disable all inputs and show map destination
-    if(omletDocument.group_location.present) {
-        $('#time_dropdown').text(omletDocument.group_location.share_time);
-        $('#time_dropdown').val(omletDocument.group_location.share_time);
+    if(omletDocument.group_location_.present) {
+        $('#time_dropdown').text(omletDocument.group_location_.share_time);
+        $('#time_dropdown').val(omletDocument.group_location_.share_time);
         $('#time_dropdown').addClass('disabled');
         $('#address_form').addClass('hidden');
         $('#map-canvas').addClass('hidden');
         $('#dropmarker_button').addClass('hidden');
-        $('#addr_string').append('<h3>'+omletDocument.group_location.address_string+'</h3>');
+        $('#addr_string').append('<h3>'+omletDocument.group_location_.address_string+'</h3>');
         $('#addr_string').removeClass('hidden');
     }
     
@@ -120,33 +158,41 @@ function showNewPage() {
         }
         else {
             //If user is the first to share location, update group_location
-            if(!omletDocument.group_location.present) {
-                omletDocument.group_location.present = true;
-                omletDocument.group_location.start_time = new Date().getTime();
-                omletDocument.group_location.share_time = time;
-                omletDocument.group_location.lat = newPageCurrentLat;
-                omletDocument.group_location.lng = newPageCurrentLng;
+            if(!omletDocument.group_location_.present) {
+                omletDocument.group_location_.present = true;
+                omletDocument.group_location_.start_time = new Date().getTime();
+                omletDocument.group_location_.share_time = time;
+                omletDocument.group_location_.lat = newPageCurrentLat;
+                omletDocument.group_location_.lng = newPageCurrentLng;
+                
+                //Push updates to parse
+                parseUpdate(parseDBID, 'group_location_', omletDocument.group_location_);
                 
                 //Update address string
                 var geocoder = new google.maps.Geocoder();
                 geocoder.geocode({ 'latLng': new google.maps.LatLng(newPageCurrentLat, newPageCurrentLng) }, function(results, status) {
                     if (status == google.maps.GeocoderStatus.OK) {
-                        omletDocument.group_location.address_string = results[0].formatted_address;
+                        omletDocument.group_location_.address_string = results[0].formatted_address;
+                        //Push updates to parse
+                        parseUpdate(parseDBID, 'group_location_', omletDocument.group_location_);
                     }
                 });
             }
             
             //TODO: Get user id (temporary for now)
             var omletID = omletIDPrincipal;
-            for(var i=0; i<omletDocument.user_data.length; i++) {
-                if(omletDocument.user_data[i].omletID == omletID) {
-                    omletDocument.user_data[i].sharing = true;
-                    omletDocument.user_data[i].travel_method = method;
+            if(omletID in omletDocument) {
+                    omletDocument[omletID].sharing = true;
+                    omletDocument[omletID].travel_method = method;
+                    
+                    //Push updates to parse
+                    parseUpdate(parseDBID, omletID, omletDocument[omletID]);
                     
                     //Update numTrips on parse database
                     parseIncrement(omletID, 'numTrips');
-                    break;
-                }
+            }
+            else {
+                alert("Error! omletID not found in Document! (showNewPage)");
             }
             //set Watchposition to update position
             var options = {enableHighAccuracy: true};
@@ -166,34 +212,36 @@ function showLocationPage() {
     $("#stopshare_button").click(function() {
         //TODO: Get user id (temporary for now)
         var omletID = omletIDPrincipal;
-        for(var i=0; i<omletDocument.user_data.length; i++) {
-            if(omletDocument.user_data[i].omletID == omletID) {
-                omletDocument.user_data[i].sharing = false;
-                break;
-            }
+        if(omletID in omletDocument) {
+            omletDocument[omletID].sharing = false;
+            //Push updates to parse
+            parseUpdate(parseDBID, omletID, omletDocument[omletID]);
+        }
+        else {
+            alert("Error! omletID not found in Document! (showLocationPage 1)");
         }
         clearInterval(mapSetIntervalID);
         mapSetIntervalID = -1;
         mapInstance = null;
         markersArray = []
-        stopShareCheck();
+        //stopShareCheck();
         showMainPage();
     });
     if(checkInEnabled) { //Enable the check in button and add functionality
         $("#checkin_button").removeClass("disabled");
         $("#checkin_button").click(function() {
             checkInUpdate();
-            stopShareCheck();
+            //stopShareCheck();
         });
     }
     else
         $("#checkin_button").addClass("disabled");
     var currentID = 0;
-    if(omletDocument.user_data.length > 0) {
+    if(omletDocument.users_.length > 0) {
         //Set first thumbnail
         $("#thumbnailID").html(""); //Clear
-        var info = omletDocument.user_data[0];
-        var HTMLCode = "<h3>"+info.fullname+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
+        var info = omletDocument[omletDocument.users_[0]];
+        var HTMLCode = "<h3>"+info.omletID+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
                    "<p style=\"font-weight:bold\">ETA: "+info.ETA+"</p><p style=\"font-weight:bold\">Arrived at Destination: "+info.arrived+"</p>";
         $("#thumbnailID").html(HTMLCode);
     }
@@ -205,43 +253,43 @@ function showLocationPage() {
         if(currentID != 0) {
             currentID -= 1;
             //Change icon colors appropriately
-            if(currentID != omletDocument.user_data.length - 1)
+            if(currentID != omletDocument.users_.length - 1)
                 $("#rightIcon").removeClass("text-muted");
             if(currentID == 0)
                 $("#leftIcon").addClass("text-muted");
             
             //fetch user info
-            var info = omletDocument.user_data[currentID];
+            var info = omletDocument[omletDocument.users_[currentID]];
             
             //Replace HTML
-            var HTMLCode = "<h3>"+info.fullname+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
+            var HTMLCode = "<h3>"+info.omletID+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
                        "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p><p style=\"font-weight:bold\">Arrived at Destination: "+info.arrived+"</p>";
             $("#thumbnailID").html(""); //Clear
             $("#thumbnailID").html(HTMLCode);
         }
     });
     $("#rightClick").click(function(){
-        if(currentID != omletDocument.user_data.length - 1) {
+        if(currentID != omletDocument.users_.length - 1) {
             currentID += 1;
             //Change icon colors appropriately
-             if(currentID == omletDocument.user_data.length - 1)
+             if(currentID == omletDocument.users_.length - 1)
                 $("#rightIcon").addClass("text-muted");
             if(currentID != 0)
                 $("#leftIcon").removeClass("text-muted");
             
             //fetch user info
-            var info = omletDocument.user_data[currentID];
+            var info = omletDocument[omletDocument.users_[currentID]];
             
             //Replace HTML
-            var HTMLCode = "<h3>"+info.fullname+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
+            var HTMLCode = "<h3>"+info.omletID+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
                        "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p><p style=\"font-weight:bold\">Arrived at Destination: "+info.arrived+"</p>";
             $("#thumbnailID").html(""); //Clear
             $("#thumbnailID").html(HTMLCode);
         }
     });
     //Update destination text
-    if(omletDocument.group_location.present) {
-        var pos = new google.maps.LatLng(omletDocument.group_location.lat, omletDocument.group_location.lng);
+    if(omletDocument.group_location_.present) {
+        var pos = new google.maps.LatLng(omletDocument.group_location_.lat, omletDocument.group_location_.lng);
         setDestination(pos);
     }
     else {
@@ -263,12 +311,12 @@ function showLocationPage() {
     //TODO: Get user id (temporary for now)
     var omletID = omletIDPrincipal;
     var isUserSharing = false;
-    for(var i=0; i<omletDocument.user_data.length; i++) {
-        if(omletDocument.user_data[i].omletID == omletID) {
-            if(omletDocument.user_data[i].sharing)
-                isUserSharing = true;
-            break;
-        }
+    if(omletID in omletDocument) {
+        if(omletDocument[omletID].sharing)
+            isUserSharing = true;
+    }
+    else {
+        alert("Error! omletID not found in Document! (showLocationPage 2)");
     }
     if(!isUserSharing)
         $("#stopshare_button").addClass('hidden');
@@ -299,16 +347,16 @@ function showStatsPage(event) {
 
 /* Helper functions */
 function positionUpdate(pos) {
-    //TODO: Get user id (temporary for now)
     var tempLat = pos.coords.latitude;
     var tempLng = pos.coords.longitude;
-    var omletID = omletIDPrincipal;
     var curSharing;
-    for(var i=0; i<omletDocument.user_data.length; i++) {
-        if(omletDocument.user_data[i].omletID == omletID) {
-            curSharing = omletDocument.user_data[i].sharing;
-            break;
-        }
+    //TODO: Get user id (temporary for now)
+    var omletID = omletIDPrincipal;
+    if(omletID in omletDocument) {
+        curSharing = omletDocument[omletID].sharing;
+    }
+    else {
+        alert("Error! omletID not found in Document! (positionUpdate 1)");
     }
     if(!curSharing) { //Not sharing anymore, stop the watchPosition event
         navigator.geolocation.clearWatch(watchPositionID);
@@ -317,24 +365,28 @@ function positionUpdate(pos) {
     }
     else {
         //Here we update the ETA and Location(Lat/Lng)
-        for(var i=0; i<omletDocument.user_data.length; i++) {
-            if(omletDocument.user_data[i].omletID == omletID) {
-                omletDocument.user_data[i].location.lat = tempLat;
-                omletDocument.user_data[i].location.lng = tempLng;
-                //Update ETA and check in button
-                var origin = new google.maps.LatLng(tempLat, tempLng);
-                var destination = new google.maps.LatLng(omletDocument.group_location.lat, omletDocument.group_location.lng);
-                var service = new google.maps.DistanceMatrixService();
-                var travelMode;
-                if(omletDocument.user_data[i].travel_method == "Car")
-                    travelMode = google.maps.TravelMode.DRIVING;
-                else if(omletDocument.user_data[i].travel_mode == "Bike")
-                    travelMode = google.maps.TravelMode.BICYCLING;
-                else
-                    travelMode = google.maps.TravelMode.WALKING;
-                service.getDistanceMatrix({"origins": [origin], "destinations": [destination], "travelMode": travelMode}, ETAUpdate);
-                break;
-            }
+        if(omletID in omletDocument) {
+            omletDocument[omletID].location.lat = tempLat;
+            omletDocument[omletID].location.lng = tempLng;
+            
+            //Push updates to parse
+            parseUpdate(parseDBID, omletID, omletDocument[omletID]);
+            
+            //Update ETA and check in button
+            var origin = new google.maps.LatLng(tempLat, tempLng);
+            var destination = new google.maps.LatLng(omletDocument.group_location_.lat, omletDocument.group_location_.lng);
+            var service = new google.maps.DistanceMatrixService();
+            var travelMode;
+            if(omletDocument[omletID].travel_method == "Car")
+                travelMode = google.maps.TravelMode.DRIVING;
+            else if(omletDocument[omletID].travel_mode == "Bike")
+                travelMode = google.maps.TravelMode.BICYCLING;
+            else
+                travelMode = google.maps.TravelMode.WALKING;
+            service.getDistanceMatrix({"origins": [origin], "destinations": [destination], "travelMode": travelMode}, ETAUpdate);
+        }
+        else {
+            alert("Error! omletID not found in Document! (positionUpdate 2)");
         }
     }
 }
@@ -343,16 +395,18 @@ function ETAUpdate(response, status) {
     if (status == google.maps.DistanceMatrixStatus.OK) {
         //TODO: Get user id (temporary for now)
         var omletID = omletIDPrincipal;
-        for(var i=0; i<omletDocument.user_data.length; i++) {
-            if(omletDocument.user_data[i].omletID == omletID) {
-                if(omletDocument.user_data[i].travel_method != "N/A") {
-                    omletDocument.user_data[i].ETA = response.rows[0].elements[0].duration.text;
-                    break;
-                }
+        if(omletID in omletDocument) {
+            if(omletDocument[omletID].travel_method != "N/A") {
+                omletDocument[omletID].ETA = response.rows[0].elements[0].duration.text;
+                
+                //Push updates to parse
+                parseUpdate(parseDBID, omletID, omletDocument[omletID]);
             }
         }
+        else {
+            alert("Error! omletID not found in Document! (ETAUpdate)");
+        }
         //Now check to see if user is less than 250 meters from destination, in which case, enable check in button
-        console.log(response.rows[0].elements[0].distance.value);
         if(response.rows[0].elements[0].distance.value <= 250) {
             checkInEnabled = true;
             if(inLocationScreen) {
@@ -428,9 +482,9 @@ function updateMapHandler() {
 function createMap() {
     $("#map-canvas").html("");
     var map;
-    if(omletDocument.group_location.present) { //Location sharing started
+    if(omletDocument.group_location_.present) { //Location sharing started
         var mapOptions = {
-            center: new google.maps.LatLng(omletDocument.group_location.lat, omletDocument.group_location.lng),
+            center: new google.maps.LatLng(omletDocument.group_location_.lat, omletDocument.group_location_.lng),
             zoom: 17,
             mapTypeId: google.maps.MapTypeId.ROADMAP
         };
@@ -466,20 +520,21 @@ function updateMap(map) {
     
     // Place destinations marker on the map
     var marker1 = new google.maps.Marker({
-        position: new google.maps.LatLng(omletDocument.group_location.lat, omletDocument.group_location.lng),
+        position: new google.maps.LatLng(omletDocument.group_location_.lat, omletDocument.group_location_.lng),
         map: map,
         icon: 'img/red-pushpin.png',
         title:"Destination"
     });
     marker1.setMap(map);
     markersArray.push(marker1);
-    for(var i=0; i<omletDocument.user_data.length; i++) {
-        if(omletDocument.user_data[i].sharing) {
+    for(var i=0; i<omletDocument.users_.length; i++) {
+        if(omletDocument[omletDocument.users_[i]].sharing) {
+            var curUser = omletDocument.users_[i];
             var tempMarker = new google.maps.Marker({
-                position: new google.maps.LatLng(omletDocument.user_data[i].location.lat, omletDocument.user_data[i].location.lng),
+                position: new google.maps.LatLng(omletDocument[curUser].location.lat, omletDocument[curUser].location.lng),
                 map: map,
-                icon: omletDocument.user_data[i].icon,
-                title: omletDocument.user_data[i].fullname
+                icon: omletDocument[curUser].icon,
+                title: omletDocument[curUser].omletID
             });
             tempMarker.setMap(map);
             markersArray.push(tempMarker);
@@ -491,16 +546,20 @@ function checkInUpdate() {
     //TODO: Get user id (temporary for now)
     var omletID = omletIDPrincipal;
     //Set arrived and stop sharing
-    for(var i=0; i<omletDocument.user_data.length; i++) {
-        if(omletDocument.user_data[i].omletID == omletID) {
-            omletDocument.user_data[i].arrived = true;
-            omletDocument.user_data[i].sharing = false;
-        }
+    if(omletID in omletDocument) {
+        omletDocument[omletID].arrived = true;
+        omletDocument[omletID].sharing = false;
+        
+        //Push updates to parse
+        parseUpdate(parseDBID, omletID, omletDocument[omletID]);
+    }
+    else {
+        alert("Error! omletID not found in Document! (checkInUpdate)");
     }
     //Now check to see if user was on time
     var userOnTime = false;
     var curTime = new Date().getTime();
-    var expiredTime = omletDocument.group_location.start_time + (omletDocument.group_location.share_time * 60 * 1000);
+    var expiredTime = omletDocument.group_location_.start_time + (omletDocument.group_location_.share_time * 60 * 1000);
     if(curTime < expiredTime)
         userOnTime = true;
     if(userOnTime) {
@@ -513,18 +572,19 @@ function checkInUpdate() {
     checkInEnabled = false;
 }
 
-//If no one in the chat is sharing anymore, clear group_location
+//If no one in the chat is sharing anymore, clear group_location NOT USED FOR PARSE
+/*
 function stopShareCheck() {
     var allStopped = true;
     //Replace with Omlet Global Document
-    for(var i=0; i<omletDocument.user_data.length; i++) {
-        if(omletDocument.user_data[i].sharing) {
+    for(var i=0; i<omletDocument.users_.length; i++) {
+        if(omletDocument[omletDocument.users_[i]].sharing) {
             allStopped = false;
             break;
         }
     }
     if(allStopped) { //Clear group_location (set to default values)
-        omletDocument.group_location = {
+        omletDocument.group_location_ = {
             "present": false,
             "start_time": 0,
             "share_time": 0,
@@ -533,9 +593,31 @@ function stopShareCheck() {
             "address_string": ""
         };
     }
+} */
+
+function parseUpdateOmletDocument(parseDBID, omletID, initial) {
+    var OmletDocument = Parse.Object.extend("OmletDocument");
+    var query = new Parse.Query(OmletDocument);
+    query.get(parseDBID, {
+        success: function(omDoc) {
+            if(!initial) {
+                //Save local copy of my own stats, and replace
+                var temp = omletDocument[omletID];
+                omletDocument = omDoc.toJSON();
+                omletDocument[omletID] = temp;
+            }
+            else {
+                omletDocument = omDoc.toJSON();
+                pinpointInitialize();
+            }
+        },
+        error: function(object, error) {
+            alert(error);
+        }
+    });
 }
 
-function parseAddUser(omletID, fullName) {
+function parseAddUserStats(omletID, fullName) {
     var Stats = Parse.Object.extend("Stats");
     var query = new Parse.Query(Stats);
     query.get("FCp1oHcDNh", {
@@ -551,7 +633,7 @@ function parseAddUser(omletID, fullName) {
     });
 }
 
-function parseRemoveUser(omletID) { //Sets column to undefined
+function parseRemoveUserStats(omletID) { //Sets column to undefined
     var Stats = Parse.Object.extend("Stats");
     var query = new Parse.Query(Stats);
     query.get("FCp1oHcDNh", {
@@ -565,15 +647,35 @@ function parseRemoveUser(omletID) { //Sets column to undefined
     });
 }
 
-function parseUpdate(omletID, key, value) {
-    var Stats = Parse.Object.extend("Stats");
-    var query = new Parse.Query(Stats);
-    query.get("FCp1oHcDNh", {
-        success: function(stats) {
-            var tempStats = stats.get(omletID);
-            tempStats[key] = value;
-            stats.set(omletID, tempStats);
-            stats.save();
+function parseUpdate(parseDBID, omletID, value) {
+    var OmletDocument = Parse.Object.extend("OmletDocument");
+    var query = new Parse.Query(OmletDocument);
+    query.get(parseDBID, {
+        success: function(omDoc) {
+            omDoc.set(omletID, value);
+            omDoc.save();
+        },
+        error: function(object, error) {
+            alert(error);
+        }
+    });
+}
+
+function parseAddUserOmletDocument(parseDBID, omletID) {
+    var OmletDocument = Parse.Object.extend("OmletDocument");
+    var query = new Parse.Query(OmletDocument);
+    query.get(parseDBID, {
+        success: function(omDoc) {
+            var placeholder = {"omletID": omletIDPrincipal, "sharing": false, "travel_method": "N/A", "pinColor": map_icons[omletDocument.users_.length],
+                               "ETA": 0, "icon": color_to_icon[map_icons[omletDocument.users_.length]], "arrived": false, "location": { "lat": 0, "lng": 0}};
+            omletDocument[omletID] = placeholder;
+            omDoc.set(omletID, placeholder);
+            var temp = omDoc.toJSON().users_;
+            omletDocument.users_.push(omletID);
+            temp.push(omletID);
+            omDoc.set('users_', temp);
+            omDoc.save();
+            showMainPage(true);
         },
         error: function(object, error) {
             alert(error);
@@ -627,95 +729,23 @@ function parseGetStats() { //Update stats database, fired every time we visit th
     });
 }
 
+//From http://www.sitepoint.com/url-parameters-jquery/
+function getParam(name) {
+    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+    if(results)
+        return results[1];
+    else
+        return null;
+}
+
 /* Temporary JSON/Database files */
 //Will be replaced by global Omlet JSON document
-var omletDocument = {
-    "group_location": {
-        "present": false,
-        "start_time": 0,
-        "share_time": 0,
-        "lat": 0,
-        "lng": 0,
-        "address_string": ""
-    },
-    "user_data": [
-        {
-            "omletID": "khan",
-            "fullname": "Kevin Han",
-            "sharing": false,
-            "travel_method": "N/A",
-            "pinColor": "Red",
-            "ETA": 2,
-            "icon": "img/red-dot.png",
-            "arrived": false,
-            "location": {
-                "lat": 37.427917,
-                "lng": -122.174294
-            }
-        },
-        {
-            "omletID": "gkho",
-            "fullname": "Gabriel Kho",
-            "sharing": true,
-            "travel_method": "N/A",
-            "pinColor": "Green",
-            "ETA": 4,
-            "icon": "img/green-dot.png",
-            "arrived": false,
-            "location": {
-                "lat": 37.429422,
-                "lng": -122.173869
-            }
-        },
-        {
-            "omletID": "jhdoe",
-            "fullname": "John Doe",
-            "sharing": true,
-            "travel_method": "N/A",
-            "pinColor": "Blue",
-            "ETA": 7,
-            "icon": "img/blue-dot.png",
-            "arrived": false,
-            "location": {
-                "lat": 37.429291,
-                "lng": -122.172210
-            }
-        },
-        {
-            "omletID": "jndoe",
-            "fullname": "Jane Doe",
-            "sharing": true,
-            "travel_method": "N/A",
-            "pinColor": "Yellow",
-            "ETA": 3,
-            "icon": "img/yellow-dot.png",
-            "arrived": false,
-            "location": {
-                "lat": 37.428204,
-                "lng": -122.175624
-            }
-        },
-        {
-            "omletID": "jsmith",
-            "fullname": "John Smith",
-            "sharing": true,
-            "travel_method": "N/A",
-            "pinColor": "Purple",
-            "ETA": 11,
-            "icon": "img/purple-dot.png",
-            "arrived": false,
-            "location": {
-                "lat": 37.431905,
-                "lng": -122.175787
-            }
-        }
-    ]
-};
+var omletDocument; //Local Omlet Object
 
 var localstats; //Local Parse Object
 
 //Temporary ID
-var omletIDPrincipal = "khan";
+var omletIDPrincipal;
 
 //Map icons
 var map_icons = ["Red", "Blue", "Green", "Yellow", "Orange", "Purple", "Pink", "Light Blue"];
@@ -731,3 +761,4 @@ var markersArray = [];
 var checkInEnabled = false;
 var newPageCurrentLat;
 var newPageCurrentLng;
+var parseDBID;
