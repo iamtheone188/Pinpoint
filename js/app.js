@@ -3,11 +3,12 @@ $(document).ready(function(){
     //Initialization call to parse
     Parse.initialize("QkXw7fBPJI2f3DpSlP17JaLwjct7mSlAglW921ZD", "Sgpsbwn4Ad8OGmKbZ1wgfMXo0TEtQlaaCCdmFoWX");
     var databaseExists = false;
-    if(getParam('omletID') == null || getParam('parseDB') == null)
+    if(getParam('omletID') == null || getParam('parseDB') == null || getParam('fullName') == null)
         showErrorPage();
     else {
         omletIDPrincipal = getParam('omletID');
         parseDBID = getParam('parseDB');
+        fullName = decodeURI(getParam('fullName'));
         //Initial pull of database
         parseUpdateOmletDocument(parseDBID, omletIDPrincipal, true);
     } 
@@ -52,10 +53,10 @@ function showMainPage(newUserFlag) {
     for(var key in omletDocument) {
         if(omletDocument.hasOwnProperty(key) && key != 'group_location_' && key != 'users_' && key != 'objectId' && key != 'createdAt' && key != 'updatedAt') {
             if(omletDocument[key]['sharing']) {
-                $("#tabledata").append('<tr><td>'+(i+1)+'</td><td>'+omletDocument[key]['omletID']+'</td><td>True</td><td><button id="'+omletDocument[key]['omletID']+'_button" type="button" class="btn btn-primary">View</button></td></tr>');
+                $("#tabledata").append('<tr><td>'+(i+1)+'</td><td>'+omletDocument[key]['fullName']+'</td><td>True</td><td><button id="'+omletDocument[key]['omletID']+'_button" type="button" class="btn btn-primary">View</button></td></tr>');
             }
             else {
-                $("#tabledata").append('<tr><td>'+(i+1)+'</td><td>'+omletDocument[key]['omletID']+'</td><td>False</td><td><button id="'+omletDocument[key]['omletID']+'_button" type="button" class="btn btn-primary">View</button></td></tr>');
+                $("#tabledata").append('<tr><td>'+(i+1)+'</td><td>'+omletDocument[key]['fullName']+'</td><td>False</td><td><button id="'+omletDocument[key]['omletID']+'_button" type="button" class="btn btn-primary">View</button></td></tr>');
             }
             i++;
         }
@@ -241,7 +242,7 @@ function showLocationPage() {
         //Set first thumbnail
         $("#thumbnailID").html(""); //Clear
         var info = omletDocument[omletDocument.users_[0]];
-        var HTMLCode = "<h3>"+info.omletID+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
+        var HTMLCode = "<h3>"+info.fullName+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
                    "<p style=\"font-weight:bold\">ETA: "+info.ETA+"</p><p style=\"font-weight:bold\">Arrived at Destination: "+info.arrived+"</p>";
         $("#thumbnailID").html(HTMLCode);
     }
@@ -262,7 +263,7 @@ function showLocationPage() {
             var info = omletDocument[omletDocument.users_[currentID]];
             
             //Replace HTML
-            var HTMLCode = "<h3>"+info.omletID+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
+            var HTMLCode = "<h3>"+info.fullName+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
                        "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p><p style=\"font-weight:bold\">Arrived at Destination: "+info.arrived+"</p>";
             $("#thumbnailID").html(""); //Clear
             $("#thumbnailID").html(HTMLCode);
@@ -281,7 +282,7 @@ function showLocationPage() {
             var info = omletDocument[omletDocument.users_[currentID]];
             
             //Replace HTML
-            var HTMLCode = "<h3>"+info.omletID+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
+            var HTMLCode = "<h3>"+info.fullName+"</h3><p style=\"font-weight:bold\">Pin Color: "+info.pinColor+"</p>" +
                        "<p style=\"font-weight:bold\">ETA: "+info.ETA+" Minutes</p><p style=\"font-weight:bold\">Arrived at Destination: "+info.arrived+"</p>";
             $("#thumbnailID").html(""); //Clear
             $("#thumbnailID").html(HTMLCode);
@@ -617,13 +618,12 @@ function parseUpdateOmletDocument(parseDBID, omletID, initial) {
     });
 }
 
-function parseAddUserStats(omletID, fullName) {
+function parseAddUserStats(omletID) {
     var Stats = Parse.Object.extend("Stats");
     var query = new Parse.Query(Stats);
     query.get("FCp1oHcDNh", {
         success: function(stats) {
-            var placeholder = {"omletID": omletID, "fullName": fullName, "numTrips": 0,
-                       "onTimeTrips": 0, "OMDEarned": 0};
+            var placeholder = {"omletID": omletID, "numTrips": 0, "onTimeTrips": 0, "OMDEarned": 0};
             stats.set(omletID, placeholder);
             stats.save();
         },
@@ -666,7 +666,7 @@ function parseAddUserOmletDocument(parseDBID, omletID) {
     var query = new Parse.Query(OmletDocument);
     query.get(parseDBID, {
         success: function(omDoc) {
-            var placeholder = {"omletID": omletIDPrincipal, "sharing": false, "travel_method": "N/A", "pinColor": map_icons[omletDocument.users_.length],
+            var placeholder = {"omletID": omletIDPrincipal, "fullName": fullName, "sharing": false, "travel_method": "N/A", "pinColor": map_icons[omletDocument.users_.length],
                                "ETA": 0, "icon": color_to_icon[map_icons[omletDocument.users_.length]], "arrived": false, "location": { "lat": 0, "lng": 0}};
             omletDocument[omletID] = placeholder;
             omDoc.set(omletID, placeholder);
@@ -722,6 +722,10 @@ function parseGetStats() { //Update stats database, fired every time we visit th
     query.get("FCp1oHcDNh", {
         success: function(stats) {
             localstats = stats.toJSON();
+            if(!(omletIDPrincipal in localstats)) {
+                parseAddUserStats(omletIDPrincipal);
+                localstats[omletIDPrincipal] = {"omletID": omletID, "fullName": fullName, "numTrips": 0, "onTimeTrips": 0, "OMDEarned": 0};
+            }
         },
         error: function(object, error) {
             alert(error);
@@ -762,3 +766,4 @@ var checkInEnabled = false;
 var newPageCurrentLat;
 var newPageCurrentLng;
 var parseDBID;
+var fullName;
